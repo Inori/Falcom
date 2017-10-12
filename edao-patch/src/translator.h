@@ -1,0 +1,7 @@
+#ifndef VITA_TRANSLATOR_H
+#define VITA_TRANSLATOR_H
+
+
+
+
+#endif //VITA_TRANSLATOR_H

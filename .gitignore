@@ -54,6 +54,6 @@ dkms.conf
 
 #PS Vita
 *.velf
-*.eboot
 *.suprx
 *.skprx
+eboot.bin
