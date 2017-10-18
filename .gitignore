@@ -56,4 +56,5 @@ dkms.conf
 *.velf
 *.suprx
 *.skprx
-eboot.bin
+*.bin
+*.swp

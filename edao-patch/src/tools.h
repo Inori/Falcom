@@ -10,6 +10,8 @@
 
 #define ALIGN(x, align) (((x) + ((align) - 1)) & ~((align) - 1))
 
+#define ADDR_THUMB(addr) ((unsigned int)(addr) | 1)
+#define ADDR_ARM(addr) ((unsigned int)(addr) & ~1)
 
 int get_title_id(char title_id[VITA_TITLE_ID_LEN]);
 

@@ -29,7 +29,7 @@ uint32_t* p_sce_process_text_entry = (uint32_t*)0x8127C9A8;
 int init_hooks()
 {
 
-	*p_sce_process_text_entry = (uint32_t)hook_scp_process_text + 1;
+	*p_sce_process_text_entry = (uint32_t)ADDR_THUMB(hook_scp_process_text);
 	DEBUG_PRINT("Hook Addr: 0x%08X Value: 0x%08X\n", p_sce_process_text_entry, *p_sce_process_text_entry);
 
 	return 0;
