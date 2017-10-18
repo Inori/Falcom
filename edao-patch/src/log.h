@@ -2,14 +2,18 @@
 #define VITA_LOG_H
 
 
-void debug_print(const char* text, ...);
+#define DEBUG
+
+
+
+void debug_print(const char* format, ...);
 
 
 
 #ifdef DEBUG
-    #define DEBUG_PRINT(format, ...) debug_print(format, __VA_ARGS__)
+    #define DEBUG_PRINT(...) debug_print(__VA_ARGS__)
 #else
-    #define DEBUG_PRINT(format, ...)
+    #define DEBUG_PRINT(...)
 #endif
 
 
