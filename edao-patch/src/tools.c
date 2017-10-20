@@ -129,7 +129,7 @@ int is_acsii_char(unsigned char c)
 	{
 		return 1;
 	}
-	if (c == 0x09 || c == 0x0A || c == 0x0D)
+	if (c == '\t' || c == '\n' || c == '\r')
 	{
 		return 1;
 	}

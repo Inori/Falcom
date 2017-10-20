@@ -9,7 +9,7 @@ LIBS    = -lSceIofilemgr_stub -lSceThreadmgrForDriver_stub -lSceAppMgr_stub
 
 PREFIX  = arm-vita-eabi
 CC      = $(PREFIX)-gcc
-CFLAGS  = -Wl,-q -Wall -O3 -nostartfiles -mthumb
+CFLAGS  = -Wl,-q -Wall -O3 -nostartfiles
 ASFLAGS = $(CFLAGS)
 
 all: $(TARGET).suprx

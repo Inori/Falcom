@@ -64,3 +64,21 @@ hook_stub:
 	.word 0x11111111
 	.word 0x22222222
 
+
+jmp_stub:
+
+	push {r6, r7}
+	adr r6, OLD_FUNC
+	ldr r7, [pc, #4]
+	ldr pc, [r7]
+	#bx r7
+	.word 0x11111111
+OLD_FUNC:
+	pop {r6, r7}
+	#original instructions
+
+	ldr.w pc, [pc, #0]
+	.word 0x22222222
+	
+
+
