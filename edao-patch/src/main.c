@@ -1,9 +1,12 @@
 #include <string.h>
 #include <psp2/types.h>
+#include <psp2/kernel/modulemgr.h>
 
 #include "log.h"
 #include "tools.h"
 #include "hook.h"
+
+
 
 int _start(SceSize args, void *argp) 
 {

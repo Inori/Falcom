@@ -1,6 +1,6 @@
 TARGET  = asuka_patch
 TITLE_ID = PCSG00246
-PSVITAIP = 192.168.1.106
+PSVITAIP = 192.168.1.110
 
 OBJS = $(patsubst %.c, %.o, $(wildcard *.c))
 HEADERS = $(wildcard *.h)
@@ -27,5 +27,5 @@ clean:
 	@rm -rf $(TARGET).suprx $(TARGET).velf $(TARGET).elf $(OBJS)
 
 send: $(TARGET).suprx
-	curl -T $(TARGET).suprx ftp://$(PSVITAIP):1337/ux0:/app/$(TITLE_ID)/
+	curl -T $(TARGET).suprx ftp://$(PSVITAIP):1337/ux0:/app/$(TITLE_ID)/sce_module/
 	@echo "Sent."

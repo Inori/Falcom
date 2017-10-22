@@ -120,7 +120,6 @@ void vita_free(void* mem)
 
 //string tools
 
-#define EDAO_STR_BUFF_LEN 1024
 
 
 int is_acsii_char(unsigned char c)
@@ -164,6 +163,9 @@ int is_opcode(unsigned char c)
 {
 	return (!is_acsii_char(c) && !is_sjis_char(c));
 }
+
+
+#define EDAO_STR_BUFF_LEN 4096
 
 char* rip_string(char* old_str)
 {
