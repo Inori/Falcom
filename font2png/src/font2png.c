@@ -17,7 +17,7 @@
 
 #if 0
 
-//For vatafont.dat in EDZERO
+//For vitafont.dat in ED ZERO
 #define OFF_NUMBER	0x00C0
 #define GET_VALUE(PTR, OFF, VAR) (*((decltype(VAR)*)(((unsigned char*)PTR) + OFF)));
 #define SIZE_ONE_CHA	0x20
