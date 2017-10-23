@@ -27,7 +27,9 @@
             "name": "Linux",
             "includePath": [
                 "/usr/local/include",
-                "${workspaceRoot}"
+                "${workspaceRoot}",
+                "/home/asuka/local/github/Falcom/common/include",
+                "/usr/lib/gcc/x86_64-linux-gnu/7/include"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
@@ -38,7 +40,7 @@
                     "/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed",
                     "/usr/include/x86_64-linux-gnu",
                     "/usr/include",
-                    "${workspaceRoot}/include",
+                    "${workspaceRoot}/../common/include",
                     "${workspaceRoot}"
                 ],
                 "limitSymbolsToIncludedHeaders": true,

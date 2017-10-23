@@ -4,10 +4,11 @@ TARGET  = $(SRCDIR)font2png
 OBJS = $(patsubst %.c, %.o, $(wildcard $(SRCDIR)*.c))
 HEADERS = $(wildcard *.h)
 
-LIBS    = -L$(SRCDIR)../lib -lpng -lz -lm
+CINCLUDES = -I$(SRCDIR)../../common/include
+LIBS    = -L$(SRCDIR)../../common/lib -lpng -lz -lm
 
 CC      = gcc
-CFLAGS  = -Wl,-q -Wall -g #-O3
+CFLAGS  = -Wl,-q -Wall -g $(CINCLUDES)#-O3
 ASFLAGS = $(CFLAGS)
 
 all: $(TARGET)

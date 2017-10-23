@@ -11,9 +11,10 @@
 */
 
 
-#include "asuka.h"
-#include "../include/pnglibconf.h"
-#include "../include/png.h"
+
+#include <asuka.h>
+#include "pnglibconf.h"
+#include "png.h"
 
 #if 0
 
