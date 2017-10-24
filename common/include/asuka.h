@@ -7,6 +7,11 @@
 #include <string.h>
 
 //macros
+
+#define IN
+#define OUT
+#define OPT
+
 #define GET_VALUE(buff, index, type) (*(type*)((unsigned char*)buff + index))
 
 #define ALIGN(x, align) (((x) + ((align) - 1)) & ~((align) - 1))

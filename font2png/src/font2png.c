@@ -1,5 +1,5 @@
 /*
-* This program extract font graph data in vitafont2bit.fnt file
+* This program extract font glyph data in vitafont2bit.fnt file
 * into a png file.
 * 
 * Support:
@@ -115,9 +115,11 @@ int write_png_file( const char* png_name, uint32_t png_width, uint32_t png_heigh
 	png_bytep trns_alpha;
 	uint32_t i;
 
+
 	fp = fopen(png_name, "wb");
 	if (fp == NULL)
 		return -1;
+
 
 	png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING,
 		NULL, NULL, NULL);
@@ -169,6 +171,7 @@ int write_png_file( const char* png_name, uint32_t png_width, uint32_t png_heigh
 		png_write_row(png_ptr, ptrRow);
 		ptrRow += png_width;
 	}
+
 
 	png_free(png_ptr, trns_alpha);
 	png_free(png_ptr, palette);

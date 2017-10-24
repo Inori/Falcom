@@ -26,21 +26,22 @@
         {
             "name": "Linux",
             "includePath": [
-                "/usr/local/include",
                 "${workspaceRoot}",
-                "/home/asuka/local/github/Falcom/common/include"
+                "${workspaceRoot}/../common/include",
+                "/usr/lib/gcc/x86_64-linux-gnu/7/include",
+                "/usr/local/include"
             ],
             "defines": [],
             "intelliSenseMode": "clang-x64",
             "browse": {
                 "path": [
+                    "${workspaceRoot}/../common/include",
+                    "${workspaceRoot}",
                     "/usr/local/include",
                     "/usr/lib/gcc/x86_64-linux-gnu/7/include",
                     "/usr/lib/gcc/x86_64-linux-gnu/7/include-fixed",
                     "/usr/include/x86_64-linux-gnu",
-                    "/usr/include",
-                    "${workspaceRoot}/../common/include",
-                    "${workspaceRoot}"
+                    "/usr/include"
                 ],
                 "limitSymbolsToIncludedHeaders": true,
                 "databaseFilename": ""

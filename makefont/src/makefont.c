@@ -4,13 +4,14 @@
 /* FreeType 2 library.                                             */
 
 
-#include <stdio.h>
-#include <string.h>
+#include <asuka.h>
 #include <math.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
-#include <asuka.h>
+
+
+
 
 #define WIDTH   640
 #define HEIGHT  480
@@ -31,6 +32,9 @@ draw_bitmap( FT_Bitmap*  bitmap,
   FT_Int  x_max = x + bitmap->width;
   FT_Int  y_max = y + bitmap->rows;
 
+  
+  
+  
 
   for ( i = x, p = 0; i < x_max; i++, p++ )
   {
@@ -51,7 +55,8 @@ show_image( void )
 {
   int  i, j;
 
-
+  
+  
   for ( i = 0; i < HEIGHT; i++ )
   {
     for ( j = 0; j < WIDTH; j++ )
@@ -90,11 +95,16 @@ main( int     argc,
     exit( 1 );
   }
 
+  
+  
+
   filename      = argv[1];                           /* first argument     */
   text          = argv[2];                           /* second argument    */
   num_chars     = strlen( text );
   angle         = ( 25.0 / 360 ) * 3.14159 * 2;      /* use 25 degrees     */
   target_height = HEIGHT;
+
+  
 
   error = FT_Init_FreeType( &library );              /* initialize library */
   /* error handling omitted */
