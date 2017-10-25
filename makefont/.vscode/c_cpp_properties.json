@@ -43,7 +43,7 @@
                     "/usr/include/x86_64-linux-gnu",
                     "/usr/include"
                 ],
-                "limitSymbolsToIncludedHeaders": true,
+                "limitSymbolsToIncludedHeaders": false,
                 "databaseFilename": ""
             }
         },

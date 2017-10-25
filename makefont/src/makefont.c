@@ -10,8 +10,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-
-
+#include "makefont.h"
 
 #define WIDTH   640
 #define HEIGHT  480
