@@ -18,7 +18,7 @@
 
 
 //tool functions
-inline
+static inline
 void* load_file(const char* filename, uint32_t* size)
 {
     if (!filename)
@@ -55,7 +55,7 @@ void* load_file(const char* filename, uint32_t* size)
     return buffer;
 }
 
-inline
+static inline
 void free_file(void* file_buff)
 {
     if(!file_buff)

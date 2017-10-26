@@ -1,160 +1,122 @@
-/* example1.c                                                      */
-/*                                                                 */
-/* This small program shows how to print a rotated string with the */
-/* FreeType 2 library.                                             */
-
-
 #include <asuka.h>
-#include <math.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
 #include "makefont.h"
-
-#define WIDTH   640
-#define HEIGHT  480
+#include "easyfont.h"
 
 
-/* origin is the upper left corner */
-unsigned char image[HEIGHT][WIDTH];
-
-
-/* Replace this function with something useful. */
-
-void
-draw_bitmap( FT_Bitmap*  bitmap,
-             FT_Int      x,
-             FT_Int      y)
+int get_old_font_info(uint8_t* buffer, 
+    FONT_HEADER* header, FONT_RANGE* ranges, 
+    CHAR_INFO** char_infos, uint32_t* char_count)
 {
-  FT_Int  i, j, p, q;
-  FT_Int  x_max = x + bitmap->width;
-  FT_Int  y_max = y + bitmap->rows;
-
-  
-  
-  
-
-  for ( i = x, p = 0; i < x_max; i++, p++ )
-  {
-    for ( j = y, q = 0; j < y_max; j++, q++ )
+    if (!buffer)
     {
-      if ( i < 0      || j < 0       ||
-           i >= WIDTH || j >= HEIGHT )
-        continue;
-
-      image[j][i] |= bitmap->buffer[q * bitmap->width + p];
+        return -1;
     }
-  }
+
+    uint8_t* cur_p = buffer;
+    //header
+    memcpy(header, cur_p, sizeof(FONT_HEADER));
+    cur_p += sizeof(FONT_HEADER);
+
+    //range
+    for (uint32_t i = 0; i != RANGE_NUM; ++i)
+    {
+        ranges[i].begin = GET_VALUE(cur_p, i * sizeof(uint32_t), uint32_t);
+        ranges[i].end = GET_VALUE(cur_p, i * sizeof(uint32_t) + RANGE_BLOCK_SIZE, uint32_t);
+        ranges[i].plus = GET_VALUE(cur_p, i * sizeof(uint32_t) + RANGE_BLOCK_SIZE * 2, uint32_t);
+    }
+    cur_p += (RANGE_BLOCK_SIZE * 3);
+
+    //index
+    FONT_INDEX* entries = (FONT_INDEX*)cur_p;
+    uint32_t count = entries->count;
+    CHAR_INFO* infos = (CHAR_INFO*)malloc(count * sizeof(CHAR_INFO));
+
+    uint32_t glyph_data_start = sizeof(FONT_HEADER) + RANGE_BLOCK_SIZE * 3 +
+                                sizeof(uint32_t) + sizeof(uint32_t) * count +
+                                sizeof(uint32_t);
+    cur_p = buffer + glyph_data_start;
+
+    //font buffer
+    for (uint32_t j = 0; j != count; ++j)
+    {
+        uint32_t val = entries->val[j];
+        uint32_t offset = val & 0x00FFFFFF;
+        uint32_t width = val >> 24;
+        
+        infos[j].offset = offset;
+        infos[j].width = width;
+        memcpy(infos[j].buffer, cur_p + offset, FONT_SIZE_FATOR * width);
+    }
+
+    *char_infos = infos;
+    *char_count = count;
+
+    return 0;
 }
 
 
-void
-show_image( void )
+int make_font(const char* fn_code_table, const char* fn_old_font, const char* fn_new_font)
 {
-  int  i, j;
+    if (!fn_code_table || !fn_old_font || !fn_new_font)
+    {
+        return -1;
+    }
 
-  
-  
-  for ( i = 0; i < HEIGHT; i++ )
-  {
-    for ( j = 0; j < WIDTH; j++ )
-      putchar( image[i][j] == 0 ? ' '
-                                : image[i][j] < 128 ? '+'
-                                                    : '*' );
-    putchar( '\n' );
-  }
+
+    //load code table
+
+    //
+    uint32_t old_size = 0;
+    uint8_t* old_font_buff = (uint8_t*)load_file(fn_old_font, &old_size);
+    if (!old_font_buff)
+    {
+        goto FAILED;
+    }
+
+    FONT_HEADER header = {0};
+    FONT_RANGE font_ranges[RANGE_NUM] = {0};
+    CHAR_INFO* char_infos = NULL;
+    uint32_t char_count = 0;
+
+    get_old_font_info(old_font_buff,
+                      &header, font_ranges,
+                      &char_infos, &char_count);
+
+
+
+    return 0;
+FAILED:
+    if (old_font_buff)
+    {
+        free_file(old_font_buff);
+    }
+    if (char_infos)
+    {
+        free(char_infos);
+    }
+
+    return -1;
 }
 
 
-int
-main( int     argc,
-      char**  argv )
+int main(int argc, char** argv)
 {
-  FT_Library    library;
-  FT_Face       face;
+    if ( argc != 4 )
+    {
+        fprintf ( stderr, "usage: %s code-table.txt old-font.fnt new-font.fnt\n", argv[0] );
+        exit(1);
+    }
 
-  FT_GlyphSlot  slot;
-  FT_Matrix     matrix;                 /* transformation matrix */
-  FT_Vector     pen;                    /* untransformed origin  */
-  FT_Error      error;
+    char* fn_code_table = argv[1];
+    char* fn_old_font = argv[2];
+    char* fn_new_font = argv[3];
 
-  char*         filename;
-  char*         text;
 
-  double        angle;
-  int           target_height;
-  int           n, num_chars;
+    int ret = make_font(fn_code_table, fn_old_font, fn_new_font);
 
-  
-
-  if ( argc != 3 )
-  {
-    fprintf ( stderr, "usage: %s font sample-text\n", argv[0] );
-    exit( 1 );
-  }
-
-  
-  
-
-  filename      = argv[1];                           /* first argument     */
-  text          = argv[2];                           /* second argument    */
-  num_chars     = strlen( text );
-  angle         = ( 25.0 / 360 ) * 3.14159 * 2;      /* use 25 degrees     */
-  target_height = HEIGHT;
-
-  
-
-  error = FT_Init_FreeType( &library );              /* initialize library */
-  /* error handling omitted */
-
-  error = FT_New_Face( library, filename, 0, &face );/* create face object */
-  /* error handling omitted */
-
-  /* use 50pt at 100dpi */
-  error = FT_Set_Char_Size( face, 50 * 64, 0,
-                            100, 0 );                /* set character size */
-  /* error handling omitted */
-
-  slot = face->glyph;
-
-  /* set up matrix */
-  matrix.xx = (FT_Fixed)( cos( angle ) * 0x10000L );
-  matrix.xy = (FT_Fixed)(-sin( angle ) * 0x10000L );
-  matrix.yx = (FT_Fixed)( sin( angle ) * 0x10000L );
-  matrix.yy = (FT_Fixed)( cos( angle ) * 0x10000L );
-
-  /* the pen position in 26.6 cartesian space coordinates; */
-  /* start at (300,200) relative to the upper left corner  */
-  pen.x = 300 * 64;
-  pen.y = ( target_height - 200 ) * 64;
-
-  for ( n = 0; n < num_chars; n++ )
-  {
-    /* set transformation */
-    FT_Set_Transform( face, &matrix, &pen );
-
-    /* load glyph image into the slot (erase previous one) */
-    error = FT_Load_Char( face, text[n], FT_LOAD_RENDER );
-    if ( error )
-      continue;                 /* ignore errors */
-
-    /* now, draw to our target surface (convert position) */
-    draw_bitmap( &slot->bitmap,
-                 slot->bitmap_left,
-                 target_height - slot->bitmap_top );
-
-    /* increment pen position */
-    pen.x += slot->advance.x;
-    pen.y += slot->advance.y;
-  }
-
-  show_image();
-
-  FT_Done_Face    ( face );
-  FT_Done_FreeType( library );
-
-  return 0;
+    return ret;
 }
-
-/* EOF */

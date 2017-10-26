@@ -57,3 +57,5 @@ dkms.conf
 *.skprx
 *.bin
 *.swp
+*.fnt
+*.dat

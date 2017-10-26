@@ -7,7 +7,7 @@ HEADERS = $(wildcard *.h)
 LIBS    = -L$(SRCDIR)../../common/lib -lfreetype -lpng -lz -lm
 
 CC      = gcc
-CFLAGS  = -Wl,-q -Wall -g -I$(SRCDIR)../../common/include #-O3
+CFLAGS  = -Wl,-q -Wall -std=gnu11 -g -I$(SRCDIR)../../common/include #-O3
 ASFLAGS = $(CFLAGS)
 
 all: $(TARGET)
