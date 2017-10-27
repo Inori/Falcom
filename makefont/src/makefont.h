@@ -49,6 +49,10 @@ typedef struct CHAR_INFO_S
     uint8_t buffer[FONT_SIZE * FONT_SIZE / 4];
 } CHAR_INFO;
 
-
+typedef struct CODE_PAIR_S
+{
+    uint16_t code;
+    wchar_t wch;
+} CODE_PAIR;
 
 #endif //MAKE_FONT_H
