@@ -66,6 +66,23 @@ void free_file(void* file_buff)
 }
 
 
+static inline
+int write_new_file(const char* filename, uint8_t* buffer, uint32_t len)
+{
+    if (!filename || !buffer)
+    {
+        return -1;
+    }
+
+    FILE* fdst = fopen(filename, "wb");
+    if (!fdst)
+    {
+        return -1;
+    }
+    fwrite(buffer, len, 1, fdst);
+    fclose(fdst);
+}
+
 
 
 #endif //ASUKA_H

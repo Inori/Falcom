@@ -2,6 +2,7 @@
 #define MAKE_FONT_H
 
 #define FONT_SIZE 0x20
+#define FONT_HALF_SIZE (FONT_SIZE/2)
 #define RANGE_NUM 4
 #define RANGE_BLOCK_SIZE 0x40
 
@@ -10,6 +11,8 @@
                            //compared to 256 gray levels of FreeType font
                         
 #define FONT_SIZE_FATOR (FONT_SIZE * BITS_EACH_PIXEL / 8)
+
+#define INVILID_CHAR_INDEX 0xFFFFFFFF
 
 
 #pragma pack(1)

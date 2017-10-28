@@ -51,6 +51,10 @@ Mkfile.old
 dkms.conf
 
 
+#CMake
+cmake-build-*
+
+
 #PS Vita
 *.velf
 *.suprx

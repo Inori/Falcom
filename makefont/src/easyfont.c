@@ -1,12 +1,7 @@
 #include "easyfont.h"
-#include <ft2build.h>
-#include FT_FREETYPE_H
+#include FT_OUTLINE_H
 
-struct EF_CONTEXT_S
-{
-    FT_Library    library;
-    FT_Face       face;
-};
+
 
 
 int ef_init(EF_CONTEXT *ef_ctx, const char* fontname, uint32_t size)
@@ -59,13 +54,14 @@ void ef_unit(EF_CONTEXT *ef_ctx)
         return;
     }
 
-    if (ef_ctx->library)
-    {
-        FT_Done_FreeType(ef_ctx->library);
-    }
     if (ef_ctx->face)
     {
         FT_Done_Face(ef_ctx->face);
+    }
+
+    if (ef_ctx->library)
+    {
+        FT_Done_FreeType(ef_ctx->library);
     }
 
     memset(ef_ctx, 0, sizeof(EF_CONTEXT));
@@ -116,6 +112,26 @@ int ef_get_font_glyph(EF_CONTEXT *ef_ctx, IN OUT EF_FONT_INFO *info)
         goto FAILED;
     }
 
+    if(info->bold)
+    {
+        error = FT_Outline_Embolden(&ef_ctx->face->glyph->outline, (FT_Pos)(info->bold));
+        if (error)
+        {
+            goto FAILED;
+        }
+    }
+
+    if(info->italic)
+    {
+        double lean = 1.0f * info->italic / 100;
+        FT_Matrix matrix;
+        matrix.xx = (FT_Fixed)(1		* 0x10000L);
+        matrix.xy = (FT_Fixed)(lean		* 0x10000L);
+        matrix.yx = (FT_Fixed)(0		* 0x10000L);
+        matrix.yy = (FT_Fixed)(1		* 0x10000L);
+        FT_Set_Transform(ef_ctx->face, &matrix, 0 );
+    }
+
     if(ef_ctx->face->glyph->format != FT_GLYPH_FORMAT_BITMAP)
 	{
         error = FT_Render_Glyph(ef_ctx->face->glyph, FT_RENDER_MODE_NORMAL);
@@ -129,9 +145,12 @@ int ef_get_font_glyph(EF_CONTEXT *ef_ctx, IN OUT EF_FONT_INFO *info)
     FT_Bitmap* bitmap = &slot->bitmap;
 
     FT_Int x = info->x + slot->bitmap_left;
-    FT_Int y = info->h - info->y - slot->bitmap_top;
+    FT_Int y = info->y + info->h - slot->bitmap_top;
 
     blt_bitmap(bitmap, info->buffer, x, y, info->w, info->h);
+
+    info->real_width = x + bitmap->width;
+    info->real_height = y + bitmap->rows;
 FAILED:
     return error;
 }

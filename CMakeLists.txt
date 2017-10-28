@@ -18,7 +18,7 @@ set (MAKEFONT_SOURCE_FILES
         makefont/src/easyfont.c
         makefont/src/easyfont.h
         makefont/src/makefont.c
-        makefont/src/makefont.h)
+        makefont/src/makefont.h makefont/src/codeconvert.h makefont/src/codeconvert.c)
 
 add_executable(makefont ${MAKEFONT_SOURCE_FILES})
 target_link_libraries(makefont freetype png z m iconv)

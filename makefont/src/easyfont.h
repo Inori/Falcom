@@ -2,19 +2,29 @@
 #define EASY_FONT_H
 
 #include <asuka.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
 
 //
-struct EF_CONTEXT_S;
+struct EF_CONTEXT_S
+{
+    FT_Library    library;
+    FT_Face       face;
+};
 typedef struct EF_CONTEXT_S EF_CONTEXT;
 
 struct EF_FONT_INFO_S
 {
     wchar_t wc;
-    uint32_t x;  //start x
-    uint32_t y;  //start y
-    uint32_t w;  //buffer width
-    uint32_t h;  //buffer height
+    int x;  //start x
+    int y;  //start y
+    int w;  //buffer width
+    int h;  //buffer height
     uint8_t* buffer;
+    int bold;
+    int italic;
+    int real_width;  //real glyph width; return
+    int real_height;  //real glyph height; return
 };
 typedef struct EF_FONT_INFO_S EF_FONT_INFO;
 
