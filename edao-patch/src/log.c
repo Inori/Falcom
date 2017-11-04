@@ -13,11 +13,11 @@
 //and can't write anything in it.
 //So we have to find a place where we have write permission.
 #define LOG_FILENAME "ux0:plugins/asuka_log.txt"
-
+#define LOG_BUFFER_LEN 4096
 void debug_print(const char* format, ...)
 {
 	va_list list;
-	char string[512];
+	char string[LOG_BUFFER_LEN] = {0};
 
 	va_start(list, format);
 	vsprintf(string, format, list);

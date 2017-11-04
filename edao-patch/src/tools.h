@@ -1,6 +1,7 @@
 #ifndef VITA_TOOLS_H
 #define VITA_TOOLS_H
 
+#include <stdint.h>
 
 #define VITA_TITLE_ID_LEN 12
 
@@ -26,7 +27,11 @@ void vita_free(void* mem);
 
 //string tools
 
+int is_acsii_char(unsigned char c);
+
+int is_sjis_char(unsigned char c);
 
 char* rip_string(char* old_str);
+
 
 #endif

@@ -41,7 +41,7 @@ void hex_to_string(unsigned char* data, int data_len, char* string, int str_len)
 		return;
 	}
 
-	if (data_len * 2  > str_len - 1)
+	if (data_len * 3  > str_len - 1)
 	{
 		return;
 	}
@@ -49,12 +49,13 @@ void hex_to_string(unsigned char* data, int data_len, char* string, int str_len)
 	int i = 0;
 	for (; i != data_len; ++i)
 	{
-		snprintf(&string[i * 2], str_len - i * 2, "%02X", data[i]);
+		snprintf(&string[i * 3], str_len - i * 3, "%02X ", data[i]);
 	}
-	string[str_len - 1] = 0;
+	string[(i + 1)* 3] = 0;
 }
 
 
+#define DUMP_LINE_BUFF_SIZE (16 * 3 + 1)
 void dump_mem(char* tag, unsigned char* data, int len)
 {
 	if (!data || !len)
@@ -62,13 +63,25 @@ void dump_mem(char* tag, unsigned char* data, int len)
 		return;
 	}
 
-	char* dbg_string = (char*)vita_malloc(len * 2 + 1);
+	if (tag)
+	{
+		DEBUG_PRINT("%s\n", tag);	
+	}
 
-	hex_to_string(data, len, dbg_string, len * 2 + 1);
+	char buffer[DUMP_LINE_BUFF_SIZE] = {0};
+	int i = 0;
+	for (; i < len / 16; ++i)
+	{
+		hex_to_string(data + i * 16, 16, buffer, DUMP_LINE_BUFF_SIZE);
+		DEBUG_PRINT("%s\n", buffer);
+	}
 
-	DEBUG_PRINT("[%s]: %s\n", tag, dbg_string);
-
-	vita_free(dbg_string);
+	int pad = len % 16;
+	if (pad)
+	{
+		hex_to_string(data + i * 16, pad, buffer, DUMP_LINE_BUFF_SIZE);
+		DEBUG_PRINT("%s\n", buffer);
+	}
 }
 
 
@@ -165,7 +178,7 @@ int is_opcode(unsigned char c)
 }
 
 
-#define EDAO_STR_BUFF_LEN 4096
+#define EDAO_STR_BUFF_LEN 1024
 
 char* rip_string(char* old_str)
 {
@@ -188,3 +201,7 @@ char* rip_string(char* old_str)
 	string_buff[j] = 0;
 	return string_buff;
 }
+
+
+
+
