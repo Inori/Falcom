@@ -1,6 +1,6 @@
 TARGET  = asuka_patch
 TITLE_ID = PCSG00246
-PSVITAIP = 192.168.1.104
+PSVITAIP = 192.168.1.114
 
 OBJS = $(patsubst %.c, %.o, $(wildcard *.c))
 HEADERS = $(wildcard *.h)
@@ -9,7 +9,7 @@ LIBS    = -lSceIofilemgr_stub -lSceThreadmgrForDriver_stub -lSceAppMgr_stub
 
 PREFIX  = arm-vita-eabi
 CC      = $(PREFIX)-gcc
-CFLAGS  = -Wl,-q -Wall -O3 -nostartfiles
+CFLAGS  = -Wl,-q -Wall -O3 -nostartfiles 
 ASFLAGS = $(CFLAGS)
 
 all: $(TARGET).suprx

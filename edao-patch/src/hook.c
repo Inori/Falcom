@@ -1,11 +1,17 @@
-#include "hook.h"
-#include "log.h"
-#include "tools.h"
 #include <stdint.h>
 #include <string.h>
 
+#include "hook.h"
+#include "log.h"
+#include "tools.h"
+#include "translator.h"
+
+
 #define DECL_INLINE_ASM_ARM __attribute__((naked, target("arm")))
 #define DECL_INLINE_ASM_THUMB __attribute__((naked, target("thumb")))
+
+#define DECL_FUNCTION_ARM __attribute__((target("arm")))
+#define DECL_FUNCTION_THUMB __attribute__((target("thumb")))
 
 #define ASM_PUSHAD "stmfd sp!, {r0-r12}	\n\t"
 #define ASM_POPAD "ldmfd sp!, {r0-r12}	\n\t"
@@ -18,13 +24,31 @@
 
 
 ///////////////////////////////////////////////////////////
+
+typedef struct hook_context_s
+{
+	void* new_func;
+	void* old_func;
+} hook_context;
+
+
+
+hook_context* p_ctx_scp_process_scena = (hook_context*)0x8127C9A8;
+
+
+
+typedef char* (* pfunc_scp_process_scena) (void* this, char* opcode, char* name, uint32_t uk);
+pfunc_scp_process_scena old_scp_process_scena = NULL;
+
+
+
+
+
+///////////////////////////////////////////////////////////
 typedef struct SUBSTR_ITEM_S
 {
-	char* old_text;
-	uint32_t old_size;
-
-	char* new_text;
-	uint32_t new_size;
+	char* sub_str;
+	uint32_t sub_len;
 } SUBSTR_ITEM;
 
 
@@ -53,8 +77,8 @@ SUBSTR_ITEM* find_item(const char* parent_str, uint32_t position,
 	for (uint32_t i = 0; i != item_count; ++i)
 	{
 		uint32_t cur_pointer = (uint32_t)parent_str + position;
-		if (cur_pointer >= (uint32_t)items[i].old_text &&
-			cur_pointer < (uint32_t)items[i].old_text + items[i].old_size)
+		if (cur_pointer >= (uint32_t)items[i].sub_str &&
+			cur_pointer < (uint32_t)items[i].sub_str + items[i].sub_len)
 		{
 			return &items[i];
 		}
@@ -74,10 +98,11 @@ void split_string(const char* string, uint32_t str_len,
 	uint32_t count = *item_count;
 	uint32_t n = 0;
 	uint32_t cur_size = 0;
-	items[n].old_text = (char*)string;
+	items[n].sub_str = (char*)string;
 	for (uint32_t i = 0; i != str_len; ++i)
 	{
-		if ((uint8_t)string[i] >= 0x20)
+		uint8_t ch = (uint8_t)string[i];
+		if (ch >= 0x20 && ch != '#')
 		{
 			cur_size++;
 			continue;
@@ -86,12 +111,19 @@ void split_string(const char* string, uint32_t str_len,
 		{
 			if (cur_size == 0)
 			{
-				items[n].old_text++;
+				if (ch != '#')
+				{
+					items[n].sub_str++;	
+				}
+				else
+				{
+					cur_size++;
+				}
 				continue;
 			}
 		}
 
-		items[n].old_size = cur_size;
+		items[n].sub_len = cur_size;
 		n++;
 		cur_size = 0;
 
@@ -100,15 +132,23 @@ void split_string(const char* string, uint32_t str_len,
 			break;
 		}
 
-		uint32_t j = i + 1;
+		uint32_t j = i;
 		for (; j != str_len; ++j)
 		{
+			if ((uint8_t)string[j] == '#')
+			{
+				items[n].sub_str = (char*)&string[j];
+				j++;
+				cur_size++;
+				break;
+			}
+
 			if ((uint8_t)string[j] < 0x20)
 			{
 				continue;
 			}
 
-			items[n].old_text = (char*)&string[j];
+			items[n].sub_str = (char*)&string[j];
 			break;
 		}
 		i = j - 1;
@@ -116,15 +156,15 @@ void split_string(const char* string, uint32_t str_len,
 
 	if (cur_size != 0)
 	{
-		items[n].old_size = cur_size;
+		items[n].sub_len = cur_size;
 		n++;
 	}
 
 	*item_count = n;
 	for (uint32_t k = 0; k != n; ++k)
 	{
-		char* str = items[k].old_text;
-		uint32_t len = items[k].old_size;
+		char* str = items[k].sub_str;
+		uint32_t len = items[k].sub_len;
 
 		if (!has_sharp(str, len))
 		{
@@ -141,73 +181,127 @@ void split_string(const char* string, uint32_t str_len,
 			}
 		}
 
-		items[k].old_text = str + m;
-		items[k].old_size = len - m;
+		items[k].sub_str = str + m;
+		items[k].sub_len = len - m;
 	}
+}
+
+
+void translate_string(const char* old_str, uint32_t old_len, 
+					  char* new_str, uint32_t* new_len,
+					  SUBSTR_ITEM items[], uint32_t item_count)
+{
+	if (!old_str || !new_str)
+	{
+		return;
+	}
+
+	uint32_t n = 0;
+	uint32_t buffer_len = *new_len;
+	for (uint32_t i = 0; i != old_len; ++i)
+	{
+		SUBSTR_ITEM* item = find_item(old_str, i, items, item_count);
+		if (item == NULL)
+		{
+			new_str[n++] = old_str[i];
+			continue;
+		}
+
+		//assert(item->sub_str == old_str + i);
+		uint32_t translate_len = *new_len - n - 1;  //will be translated length after call
+		int is_tranlated = tl_translate(NULL, 
+										item->sub_str, item->sub_len, 
+										&new_str[n], &translate_len);
+
+		if (is_tranlated)
+		{
+			n += translate_len;
+		}
+		else
+		{
+			strncpy(&new_str[n], item->sub_str, item->sub_len);
+			n += item->sub_len;
+		}
+
+		if (n >= buffer_len)
+		{
+			break;  //make sure we are safe :)
+		}
+
+		i += (item->sub_len - 1);
+	}
+
+	*new_len = n;
 }
 
 
 #define SUBSTR_ITEM_MAX 32
-char debug_buffer[4096] = {0};
+#define DEFAULT_TRANSLATE_BUFF_LEN (4096 * 5)
+static char tl_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 
-char* new_scp_process_scena(char* text)
+extern char* test_string;
+
+DECL_FUNCTION_THUMB
+char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 {
+	char* this_opcode = NULL;
+	char* next_opcode = NULL;
+	uint32_t opcode_len = 0;
 	SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
 
-	if (!text)
+	int is_translated = 0;
+
+	do
 	{
-		return text;
+		if (!opcode)
+		{
+			this_opcode = opcode;
+			break;
+		}
+
+		if (name && *name)
+		{
+			strcpy(name, test_string);
+		}
+		
+		opcode_len = strlen(opcode);
+		uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
+		split_string(opcode, opcode_len, str_items, &item_count);
+
+		//dump_mem("Before:", (uint8_t*)opcode, opcode_len);
+
+		uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
+		translate_string(opcode, opcode_len, 
+						 tl_buffer, &translate_len, 
+						 str_items, item_count);
+		tl_buffer[translate_len] = 0;
+
+		this_opcode = tl_buffer;
+		is_translated = 1;
+
+		//dump_mem("After:", (uint8_t*)tl_buffer, translate_len);
+	} while(0);
+
+
+	old_scp_process_scena = (pfunc_scp_process_scena)ADDR_THUMB(p_ctx_scp_process_scena->old_func);
+	next_opcode = old_scp_process_scena(this, this_opcode, name, uk);
+
+	if (is_translated)
+	{
+		next_opcode = opcode + opcode_len + 1;
 	}
 
-	uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
-
-	uint32_t str_len = strlen(text);
-	split_string(text, str_len, str_items, &item_count);
-
-	DEBUG_PRINT("strlen: %d\n", str_len);
-
-	dump_mem("STR:", text, str_len);
-	for (uint32_t i = 0; i != item_count; ++i)
-	{
-		DEBUG_PRINT("%d: start: %d size:%d\n", i,
-			(uint32_t)(str_items[i].old_text - text), str_items[i].old_size);
-	}
-
-
-	return text;
-}
-
-
-//Note: r6 saves the old function address
-
-DECL_INLINE_ASM_THUMB void new_scp_process_scena_stub()
-{
-	asm volatile (
-		"sub sp, #4 \n\t"
-		ASM_PUSHAD
-		ASM_PUSHFD(r7)
-		"mov r0, r1 \n\t"
-		"blx new_scp_process_scena \n\t"
-		"str r0, [sp, #0x38] \n\t"
-		ASM_POPFD(r7)
-		ASM_POPAD
-		"ldr r1, [sp], #4 \n\t"
-		"orr r6, r6, #1 \n\t"
-		"bx r6 \n\t"
-	);
+	return next_opcode;
 }
 
 
 
 ///////////////////////////////////////////////////////////
-uint32_t* p_entry_scp_process_scena = (uint32_t*)0x8127C9A8;
-
 
 int init_hooks()
 {
 
-	*p_entry_scp_process_scena = (uint32_t)ADDR_THUMB(new_scp_process_scena_stub);
-	DEBUG_PRINT("Hook Addr: 0x%08X Value: 0x%08X\n", p_entry_scp_process_scena, *p_entry_scp_process_scena);
+	p_ctx_scp_process_scena->new_func = (void*)ADDR_THUMB(new_scp_process_scena);
 
 	return 0;
 }

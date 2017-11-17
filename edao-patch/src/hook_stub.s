@@ -66,19 +66,48 @@ hook_stub:
 
 
 jmp_stub:
+	push {r6-r8, lr}
 
-	push {r6, r7}
-	adr r6, OLD_FUNC
-	ldr r7, [pc, #4]
-	ldr pc, [r7]
-	#bx r7
+	# get function table address
+	adr r6, FUNC_TABLE
+	ldr r6, [r6]
+
+	# get new function pointer
+	ldr r7, [r6]
+
+	# get old function pointer
+	adr r8, OLD_FUNC
+
+	# save old func pointer
+	str r8, [r6, #4]
+
+	# call our new function
+	blx r7
+	pop {r6-r8, pc}
+
+FUNC_TABLE:
 	.word 0x11111111
+
 OLD_FUNC:
-	pop {r6, r7}
+
 	#original instructions
 
 	ldr.w pc, [pc, #0]
 	.word 0x22222222
 	
+
+
+test_func:
+	b test_label
+	nop
+	sub sp, sp, #0xBC
+	movw            r2, #0x44F0
+	movt.w          r2, #0x811F
+	nop
+	ldr.w pc, [pc, #0]
+	.word 0x22222222
+test_label:
+	ldr.w pc, [pc, #0]
+	.word 0x22222222
 
 
