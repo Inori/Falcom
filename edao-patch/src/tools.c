@@ -92,7 +92,7 @@ void* vita_malloc(unsigned int size)
 		return NULL;
 	}
 
-	unsigned int inner_size = size + sizeof(SceUID);
+	unsigned int inner_size = size + sizeof(SceUID) + sizeof(unsigned int);
 	SceUID block = sceKernelAllocMemBlock("asuka", SCE_KERNEL_MEMBLOCK_TYPE_USER_RW, ALIGN(inner_size, PAGE_SIZE), NULL);
 	if (block <= 0)
 	{
@@ -107,10 +107,61 @@ void* vita_malloc(unsigned int size)
 		return NULL;
 	}
 
-	memcpy(base, &block, sizeof(SceUID));
-	void* user_base = (void*)((unsigned char*)base + sizeof(SceUID));
+	*(unsigned int*)base = block;
+	*(unsigned int*)((unsigned char*)base + sizeof(SceUID)) = size;
+
+	void* user_base = (void*)((unsigned char*)base + sizeof(SceUID) + sizeof(unsigned int));
 
 	return user_base;
+}
+
+void* vita_calloc(unsigned int num, unsigned int size)
+{
+	uint32_t buffer_size = num * size;
+	if (!buffer_size)
+	{
+		return NULL;
+	}
+
+	void* buffer = vita_malloc(buffer_size);
+	if (!buffer)
+	{
+		return NULL;
+	}
+
+	memset(buffer, 0, buffer_size);
+	return buffer;
+}
+
+void* vita_realloc(void* ptr, unsigned int size)
+{
+	if (!ptr)
+	{
+		return vita_malloc(size);
+	}
+
+	if (!size)
+	{
+		vita_free(ptr);
+		return NULL;
+	}
+
+	unsigned int old_size = *(unsigned int*)((unsigned char*)ptr - sizeof(unsigned int));
+	if (old_size == size)
+	{
+		return ptr;
+	}
+
+	unsigned int copy_size = old_size < size ? old_size : size;
+	void* buffer = vita_malloc(size);
+	if (!buffer)
+	{
+		return NULL;
+	}
+
+	memcpy(buffer, ptr, copy_size);
+	vita_free(ptr);
+	return buffer;
 }
 
 void vita_free(void* mem)
@@ -120,9 +171,9 @@ void vita_free(void* mem)
 		return;
 	}
 
-	unsigned char* inner_mem = (unsigned char*)mem - sizeof(SceUID);
+	unsigned char* inner_mem = (unsigned char*)mem - sizeof(SceUID) - sizeof(unsigned int);
 	SceUID block = 0;
-	memcpy(&block, inner_mem, sizeof(SceUID));
+	block = *(unsigned int*)inner_mem;
 	if (block <= 0)
 	{
 		return;

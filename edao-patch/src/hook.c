@@ -1,10 +1,6 @@
 #include <stdint.h>
 #include <string.h>
-
 #include "hook.h"
-#include "log.h"
-#include "tools.h"
-#include "translator.h"
 
 
 #define DECL_INLINE_ASM_ARM __attribute__((naked, target("arm")))
@@ -25,6 +21,10 @@
 
 ///////////////////////////////////////////////////////////
 
+TL_CONTEXT g_tl_context;
+
+///////////////////////////////////////////////////////////
+
 typedef struct hook_context_s
 {
 	void* new_func;
@@ -39,10 +39,6 @@ hook_context* p_ctx_scp_process_scena = (hook_context*)0x8127C9A8;
 
 typedef char* (* pfunc_scp_process_scena) (void* this, char* opcode, char* name, uint32_t uk);
 pfunc_scp_process_scena old_scp_process_scena = NULL;
-
-
-
-
 
 ///////////////////////////////////////////////////////////
 typedef struct SUBSTR_ITEM_S
@@ -209,7 +205,7 @@ void translate_string(const char* old_str, uint32_t old_len,
 
 		//assert(item->sub_str == old_str + i);
 		uint32_t translate_len = *new_len - n - 1;  //will be translated length after call
-		int is_tranlated = tl_translate(NULL, 
+		int is_tranlated = tl_translate(&g_tl_context, 
 										item->sub_str, item->sub_len, 
 										&new_str[n], &translate_len);
 
@@ -235,11 +231,10 @@ void translate_string(const char* old_str, uint32_t old_len,
 }
 
 
+
 #define SUBSTR_ITEM_MAX 32
 #define DEFAULT_TRANSLATE_BUFF_LEN (4096 * 5)
 static char tl_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
-
-extern char* test_string;
 
 DECL_FUNCTION_THUMB
 char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
@@ -259,11 +254,12 @@ char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 			break;
 		}
 
-		if (name && *name)
-		{
-			strcpy(name, test_string);
-		}
-		
+
+		// if (name && *name)
+		// {
+		// 	strcpy(name, test_string);
+		// }
+
 		opcode_len = strlen(opcode);
 		uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
 		split_string(opcode, opcode_len, str_items, &item_count);

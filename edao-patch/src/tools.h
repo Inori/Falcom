@@ -22,6 +22,10 @@ void dump_mem(char* tag, unsigned char* data, int len);
 
 void* vita_malloc(unsigned int size);
 
+void* vita_calloc(unsigned int num, unsigned int size);
+
+void* vita_realloc(void* ptr, unsigned int size);
+
 void vita_free(void* mem);
 
 
