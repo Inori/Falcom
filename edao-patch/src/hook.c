@@ -231,6 +231,20 @@ void translate_string(const char* old_str, uint32_t old_len,
 }
 
 
+void translate_name(char* name)
+{
+	if (!name || !*name)
+	{
+		return;
+	}
+
+	uint32_t name_len = strlen(name);
+	tl_translate(&g_tl_context, 
+				 name, name_len, 
+				 name, &name_len);
+}
+
+
 
 #define SUBSTR_ITEM_MAX 32
 #define DEFAULT_TRANSLATE_BUFF_LEN (4096 * 5)
@@ -255,10 +269,7 @@ char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 		}
 
 
-		// if (name && *name)
-		// {
-		// 	strcpy(name, test_string);
-		// }
+		translate_name(name);
 
 		opcode_len = strlen(opcode);
 		uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
