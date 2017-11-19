@@ -239,9 +239,13 @@ void translate_name(char* name)
 	}
 
 	uint32_t name_len = strlen(name);
-	tl_translate(&g_tl_context, 
+	int tranlated = tl_translate(&g_tl_context, 
 				 name, name_len, 
 				 name, &name_len);
+	if (tranlated)
+	{
+		name[name_len] = 0;
+	}
 }
 
 

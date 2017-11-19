@@ -182,9 +182,6 @@ int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len,
 			break;
 		}
 
-		DEBUG_PRINT("index offset: 0x%08X size: 0x%08X\n", 
-					 index->new_str_off, index->new_str_len);
-
 		char* new_str = (char*)(ctx->map_buffer - sizeof(acr_header) + index->new_str_off);
 		uint32_t new_len = index->new_str_len;
 		if (!new_str || !new_len)
@@ -192,15 +189,11 @@ int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len,
 			break;
 		}
 
-		DEBUG_PRINT("addr: 0x%08X len: 0x%08X\n", new_str, new_len);
-		dump_mem("cnstr", new_str, new_len);
 
 		uint32_t copy_len = new_len < *cn_len ? new_len : *cn_len;
 		*cn_len = copy_len;
 
-		strncpy(cn_str, new_str, copy_len);
-
-		DEBUG_PRINT("copy suc: %d\n", copy_len);
+		memcpy(cn_str, new_str, copy_len);
 
 		translated = 1;
 	} while (0);
