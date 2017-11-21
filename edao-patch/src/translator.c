@@ -165,8 +165,8 @@ int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len,
 
 		uint32_t hash = bkdr_hash((uint8_t*)jp_str, jp_len);
 
-		dump_mem("jpstr", jp_str, jp_len);
-		DEBUG_PRINT("jp hash: 0x%08X\n", hash);
+		//dump_mem("jpstr", jp_str, jp_len);
+		//DEBUG_PRINT("jp hash: 0x%08X\n", hash);
 
 		khiter_t iter = kh_get(INT_ACR_NAME, map, hash);
 		if (iter == kh_end(map))
@@ -174,7 +174,7 @@ int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len,
 			break;
 		}
 
-		DEBUG_PRINT("find key sucess\n");
+		//DEBUG_PRINT("find key sucess\n");
 
 		acr_index* index = kh_val(map, iter);
 		if (!index)

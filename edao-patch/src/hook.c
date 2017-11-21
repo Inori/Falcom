@@ -249,6 +249,133 @@ void translate_name(char* name)
 }
 
 
+/*
+From IDA:
+
+switch ( code )
+{
+  case 0:
+  	...
+    goto PROC_FINISH;
+  case 1:
+  case 0xA:
+  	...
+    ++cur_pointer;
+    next_buffer = buffer + 1;
+    goto LABEL_88;
+  case 2:
+  case 5:
+    v53 = char_rect;
+    ++cur_pointer;
+    next_buffer = buffer + 1;
+    goto LABEL_88;
+  case 3:
+  case 4:
+  	...
+    ++cur_pointer;
+    next_buffer = buffer + 1;
+    goto LABEL_88;
+  case 6:
+    ++cur_pointer;
+    ...
+    next_buffer = v60 + 1;
+
+    goto LABEL_88;
+  case 7:
+    cur_pointer += 2;
+    v58 = *text___++;
+    v59 = buffer + 1;
+    *buffer = v58;
+    buffer = v59;
+    next_buffer += 2;
+    v53 = char_rect;
+    goto LABEL_88;
+  case 0x1F:
+  	...
+    cur_pointer += 3;
+    next_buffer += 3;
+    goto PROC_FINISH;
+  default:
+    ++cur_pointer;
+    next_buffer = buffer + 1;
+}
+*/
+
+
+uint32_t get_code_len(char code)
+{
+	uint32_t len = 0;
+
+	if (code >= 0x20)
+	{
+		return 1;
+	}
+
+	switch (code)
+	{
+	  case 0:	//should never be here!
+	  	len = 0;
+	  	break;
+	  case 1:
+	  case 0xA:
+		len = 1;
+		break;
+	  case 2:
+	  case 5:
+		len = 1;
+		break;
+	  case 3:
+	  case 4:
+		len = 1;
+		break;
+	  case 6:
+		len = 1;
+		break;
+	  case 7:
+		len = 2;
+		break;
+	  case 0x1F:
+		len = 3;
+		break;
+	  default:
+		len = 1;
+		break;
+	}
+	return len;
+}
+
+uint32_t parse_opcode_len(char* opcode)
+{
+	if (!opcode || !*opcode)
+	{
+		return 0;
+	}
+
+	uint32_t opcode_len = 0;
+	uint32_t str_len = 0;
+	uint32_t tail_len = 0;
+	char tail = 0;
+	char* code = opcode;
+
+	do
+	{
+		str_len = strlen(code);
+		opcode_len += str_len;
+		code += (str_len - 1);
+
+		tail = *code;
+		tail_len = get_code_len(tail);
+		code += tail_len;
+
+		if (*code != 0)
+		{
+			opcode_len++;
+		}
+	} while(*code != 0);
+
+	return opcode_len;
+}
+
 
 #define SUBSTR_ITEM_MAX 32
 #define DEFAULT_TRANSLATE_BUFF_LEN (4096 * 5)
@@ -266,8 +393,8 @@ char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 
 	do
 	{
-		if (!opcode)
-		{
+		if (!opcode || !*opcode)
+		{		
 			this_opcode = opcode;
 			break;
 		}
@@ -275,7 +402,7 @@ char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 
 		translate_name(name);
 
-		opcode_len = strlen(opcode);
+	 	opcode_len = parse_opcode_len(opcode);
 		uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
 		split_string(opcode, opcode_len, str_items, &item_count);
 
@@ -288,7 +415,7 @@ char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 		tl_buffer[translate_len] = 0;
 
 		this_opcode = tl_buffer;
-		is_translated = 1;
+	 	is_translated = 1;
 
 		//dump_mem("After:", (uint8_t*)tl_buffer, translate_len);
 	} while(0);
@@ -297,7 +424,7 @@ char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 	old_scp_process_scena = (pfunc_scp_process_scena)ADDR_THUMB(p_ctx_scp_process_scena->old_func);
 	next_opcode = old_scp_process_scena(this, this_opcode, name, uk);
 
-	if (is_translated)
+	if (is_translated && next_opcode != NULL)
 	{
 		next_opcode = opcode + opcode_len + 1;
 	}
