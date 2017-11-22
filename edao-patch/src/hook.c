@@ -369,7 +369,7 @@ uint32_t parse_opcode_len(char* opcode)
 
 		if (*code != 0)
 		{
-			opcode_len++;
+			opcode_len += (tail_len - 1);
 		}
 	} while(*code != 0);
 
