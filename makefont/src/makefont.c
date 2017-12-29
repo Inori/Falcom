@@ -9,6 +9,7 @@
 
 #define CODE_PAIR_VEC kvec_t(CODE_PAIR)
 
+static int g_font_size = FONT_SIZE;
 static int g_font_left = 0;
 static int g_font_top = 0;
 static int g_font_bold = 0;
@@ -331,7 +332,8 @@ int update_char_info(CHAR_INFO* char_info, EF_CONTEXT* ef_ctx, wchar_t ucs)
         return -1;
     }
 
-    uint32_t width = glyph_info.w;
+    //uint32_t width = glyph_info.w;
+    uint32_t width = glyph_info.real_width;
     char_info->width = width;
 
     uint8_t *vt_buff = char_info->buffer;  //ViTa
@@ -376,7 +378,7 @@ int update_font(CHAR_INFO* char_infos, uint32_t char_count,
                 const char* fn_ttf)
 {
     EF_CONTEXT ef_ctx = {0};
-    if (ef_init(&ef_ctx, fn_ttf, FONT_SIZE) != 0)
+    if (ef_init(&ef_ctx, fn_ttf, g_font_size) != 0)
     {
         return -1;
     }
@@ -455,9 +457,9 @@ FUNC_EXIT:
 int main(int argc, char** argv)
 {
 
-    if ( argc != 8 )
+    if ( argc != 9 )
     {
-        fprintf ( stderr, "usage: %s code-table.txt old-font.fnt new-font.fnt font.ttf left top bold\n", argv[0] );
+        fprintf ( stderr, "usage: %s code-table.txt old-font.fnt new-font.fnt font.ttf size left top bold\n", argv[0] );
         exit(1);
     }
 
@@ -467,9 +469,10 @@ int main(int argc, char** argv)
     char* fn_old_font = argv[2];
     char* fn_new_font = argv[3];
     char* fn_ttf_name = argv[4];
-    g_font_left = atoi(argv[5]);
-    g_font_top = atoi(argv[6]);
-    g_font_bold = atoi(argv[7]);
+    g_font_size = atoi(argv[5]);
+    g_font_left = atoi(argv[6]);
+    g_font_top = atoi(argv[7]);
+    g_font_bold = atoi(argv[8]);
 
 
     int ret = make_font(fn_code_table, fn_old_font, fn_new_font, fn_ttf_name);
