@@ -90,9 +90,13 @@ def ReadVitaGroups(vita_fn_list):
 
                 if len(string) >= 2 and \
                         ((IsAlNum(string[0]) and (not IsAlNum(string[1]))) or
-                        ((not IsAlNum(string[0])) and IsAlNum(string[1]))):
-                    continue
-
+                            ((not IsAlNum(string[0])) and IsAlNum(string[1]))) and \
+                        (string[0] != ' ' and string[1] != ' '):
+                    # this was originally prevent junk chars to be added
+                    # since now the vita text is pretty better with almost no junk chars
+                    # I just log it out and comment this
+                    # continue
+                    print('alpha string:{}'.format(string))
                 dst_list.append((fname, string))
 
         src.close()
