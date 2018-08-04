@@ -360,7 +360,7 @@ int update_char_info(CHAR_INFO* char_info, EF_CONTEXT* ef_ctx, wchar_t ucs)
                     cur_short = 0;
                 }
                 uint8_t ft_pixel = ft_buff[(reverse_y - k - 1) * FONT_SIZE + x];
-                uint8_t vt_pixel = (uint8_t) (ft_pixel / 0x55);  //FreeType generate 256 gray levels image, we need to convert it to 4 gray levels
+                uint8_t vt_pixel = (uint8_t) (ft_pixel / 0x40);  //FreeType generate 256 gray levels image, we need to convert it to 4 gray levels
                 uint32_t shift = 2 * (k % (FONT_HALF_SIZE / 2));
                 cur_short |= ((vt_pixel & 3) << shift);
             }
