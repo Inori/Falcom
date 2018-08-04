@@ -1,6 +1,6 @@
 import Common
 
-def MakeStrDic(psp_jp_files, pc_cn_files):
+def MakeStrDic(psp_jp_files, pc_cn_files, report):
 
     if len(psp_jp_files) != len(pc_cn_files):
         print('File num not match')
@@ -15,6 +15,9 @@ def MakeStrDic(psp_jp_files, pc_cn_files):
             print('Filename not match: {} {}'.format(fn_jp, fn_cn))
             input()
             exit(1)
+
+        fname = Common.BaseName(fn_cn)
+        print('process jp cn: {}'.format(fname))
 
         jp = open(fn_jp, 'r', encoding='utf16')
         cn = open(fn_cn, 'r', encoding='utf16')
@@ -39,7 +42,9 @@ def MakeStrDic(psp_jp_files, pc_cn_files):
             cn_group = Common.SplitString(cn_text)
 
             if len(jp_group) != len(cn_group):
-                print('Group not match {}--{}'.format(jp_text, cn_text))
+                log = 'Group not match {}:{}--{}'.format(fname, jp_text, cn_text)
+                print(log)
+                report.write(log + '\n')
                 continue
 
             for key, value in zip(jp_group, cn_group):
@@ -64,6 +69,8 @@ def ReadVitaGroups(vita_fn_list):
 
     dst_list = []
     for fn in vita_fn_list:
+        fname = Common.BaseName(fn)
+        print('process vita txt: {}'.format(fname))
         src = open(fn, 'r', encoding='utf16')
 
         _lines = src.readlines()
@@ -86,7 +93,7 @@ def ReadVitaGroups(vita_fn_list):
                         ((not IsAlNum(string[0])) and IsAlNum(string[1]))):
                     continue
 
-                dst_list.append(string)
+                dst_list.append((fname, string))
 
         src.close()
     return dst_list
@@ -99,9 +106,9 @@ def FormatString(index, jp_line, cn_line):
 def OutputMapFile(text_list, jpcn_dic, dst_file, report):
 
     idx = 0
-    for key_str in text_list:
+    for fname, key_str in text_list:
         if not key_str in jpcn_dic:
-            report.write(key_str+'\n')
+            report.write('{}:{}\n'.format(fname, key_str))
             continue
 
         value_str = jpcn_dic[key_str]
@@ -111,20 +118,22 @@ def OutputMapFile(text_list, jpcn_dic, dst_file, report):
 
 def main():
 
-    vita_flist = Common.Walk('VITA_JP_OUTPUT')
+    report_not_match = open('ReportNotMatch.txt', 'w', encoding='utf16')
+    report_group_error = open('ReportGroupError.txt', 'w', encoding='utf16')
+
+    vita_flist = Common.Walk('vita_jp_txt')
     text_list = ReadVitaGroups(vita_flist)
 
-    jp_flist = Common.Walk('PSP_JP_TXT')
-    cn_flist = Common.Walk('PC_CN_TXT')
-    jpcn_dic = MakeStrDic(jp_flist, cn_flist)
+    jp_flist = Common.Walk('psp_jp_txt')
+    cn_flist = Common.Walk('pc_cn_txt')
+    jpcn_dic = MakeStrDic(jp_flist, cn_flist, report_group_error)
 
     dst = open('JpCnMap.txt', 'w', encoding='utf16')
-    report = open('ImportNotMatch.txt', 'w', encoding='utf16')
 
-    OutputMapFile(text_list, jpcn_dic, dst, report)
+    OutputMapFile(text_list, jpcn_dic, dst, report_not_match)
 
     dst.close()
-    report.close()
+    report_not_match.close()
 
     print('Process done.')
 
