@@ -1,4 +1,5 @@
 import Common
+from fuzzywuzzy import fuzz
 
 def MakeStrDic(psp_jp_files, pc_cn_files, report):
 
@@ -8,6 +9,7 @@ def MakeStrDic(psp_jp_files, pc_cn_files, report):
         return
 
     dst_dic = dict()
+    match_dic = dict()
 
     for fn_jp, fn_cn in zip(psp_jp_files, pc_cn_files):
 
@@ -16,6 +18,7 @@ def MakeStrDic(psp_jp_files, pc_cn_files, report):
             input()
             exit(1)
 
+        jp_group_list = []
         fname = Common.BaseName(fn_cn)
         print('process jp cn: {}'.format(fname))
 
@@ -47,13 +50,16 @@ def MakeStrDic(psp_jp_files, pc_cn_files, report):
                 report.write(log + '\n')
                 continue
 
+            jp_group_list += jp_group
+
             for key, value in zip(jp_group, cn_group):
                 dst_dic[key] = value
 
+        match_dic[fname] = jp_group_list
         jp.close()
         cn.close()
 
-    return dst_dic
+    return dst_dic, match_dic
 
 
 def IsAlNum(string):
@@ -94,7 +100,7 @@ def ReadVitaGroups(vita_fn_list):
                         (string[0] != ' ' and string[1] != ' '):
                     # this was originally prevent junk chars to be added
                     # since now the vita text is pretty better with almost no junk chars
-                    # I just log it out and comment this
+                    # I just log it out and comment this line
                     # continue
                     print('alpha string:{}'.format(string))
                 dst_list.append((fname, string))
@@ -107,13 +113,33 @@ def FormatString(index, jp_line, cn_line):
     res = "○%08d○%s\n●%08d●%s\n\n"%(index, jp_line, index, cn_line)
     return res
 
-def OutputMapFile(text_list, jpcn_dic, dst_file, report):
+
+def FuzzyMatch(src_line, fname, match_dic, report):
+
+    lines = match_dic[fname]
+    matched_line = ''
+    for line in lines:
+        score = fuzz.ratio(src_line, line)
+        if score < 90:
+            continue
+        matched_line = line
+        log = 'fuzzy match: {} > {} -- {}'.format(fname, src_line, matched_line)
+        print(log)
+        report.write(log + '\n')
+        break
+    return matched_line
+
+
+def OutputMapFile(text_list, jpcn_dic, match_dic, dst_file, report_not_match, report_fuzzy_match):
 
     idx = 0
     for fname, key_str in text_list:
-        if not key_str in jpcn_dic:
-            report.write('{}:{}\n'.format(fname, key_str))
-            continue
+        if key_str not in jpcn_dic:
+            matched_line = FuzzyMatch(key_str, fname, match_dic, report_fuzzy_match)
+            if not matched_line:
+                report_not_match.write('{}:{}\n'.format(fname, key_str))
+                continue
+            key_str = matched_line
 
         value_str = jpcn_dic[key_str]
         dst_file.write(FormatString(idx, key_str, value_str))
@@ -124,17 +150,18 @@ def main():
 
     report_not_match = open('ReportNotMatch.txt', 'w', encoding='utf16')
     report_group_error = open('ReportGroupError.txt', 'w', encoding='utf16')
+    report_fuzzy_match = open('ReportFuzzyMatch.txt', 'w', encoding='utf16')
 
     vita_flist = Common.Walk('vita_jp_txt')
     text_list = ReadVitaGroups(vita_flist)
 
     jp_flist = Common.Walk('psp_jp_txt')
     cn_flist = Common.Walk('pc_cn_txt')
-    jpcn_dic = MakeStrDic(jp_flist, cn_flist, report_group_error)
+    jpcn_dic, match_dic = MakeStrDic(jp_flist, cn_flist, report_group_error)
 
     dst = open('JpCnMap.txt', 'w', encoding='utf16')
 
-    OutputMapFile(text_list, jpcn_dic, dst, report_not_match)
+    OutputMapFile(text_list, jpcn_dic, match_dic, dst, report_not_match, report_fuzzy_match)
 
     dst.close()
     report_not_match.close()
