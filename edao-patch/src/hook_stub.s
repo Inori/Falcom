@@ -94,7 +94,7 @@ OLD_FUNC:
 
 	ldr.w pc, [pc, #0]
 	.word 0x22222222
-	
+
 
 
 test_func:
@@ -105,9 +105,54 @@ test_func:
 	movt.w          r2, #0x811F
 	nop
 	ldr.w pc, [pc, #0]
-	.word 0x22222222
+	.word 0x33333333
 test_label:
 	ldr.w pc, [pc, #0]
+	.word 0x44444444
+
+
+
+
+jmp_stub_stack_arg:
+	push {r6-r8, lr}
+
+    sub sp, sp, #8
+    # save 5th arg
+    ldr r6, [sp, #0x18]
+    str r6, [sp]
+    # save 6th arg
+    ldr r6, [sp, #0x1c]
+    str r6, [sp, #4]
+
+	# get function table address
+	adr r6, FUNC_TABLE_2
+	ldr r6, [r6]
+
+	# get new function pointer
+	ldr r7, [r6]
+
+	# get old function pointer
+	adr r8, OLD_FUNC_2
+
+	# save old func pointer
+	str r8, [r6, #4]
+
+	# call our new function
+	blx r7
+	add sp, sp, #8
+	pop {r6-r8, pc}
+
+FUNC_TABLE_2:
+	.word 0x11111111
+
+OLD_FUNC_2:
+
+	#original instructions
+
+	ldr.w pc, [pc, #0]
 	.word 0x22222222
+	
+
+
 
 

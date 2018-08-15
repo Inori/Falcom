@@ -34,11 +34,24 @@ typedef struct hook_context_s
 
 
 hook_context* p_ctx_scp_process_scena = (hook_context*)0x8127C9A8;
-
+hook_context* p_ctx_scp_process_story = (hook_context*)0x8127C9B0;
+hook_context* p_ctx_scp_draw_item1 = (hook_context*)0x8127C9B8;
+hook_context* p_ctx_scp_draw_item2 = (hook_context*)0x8127C9C0;
 
 
 typedef char* (* pfunc_scp_process_scena) (void* this, char* opcode, char* name, uint32_t uk);
 pfunc_scp_process_scena old_scp_process_scena = NULL;
+
+typedef char* (* pfunc_scp_process_story) (void* this, char* opcode, char* str, uint32_t uk);
+pfunc_scp_process_story old_scp_process_story = NULL;
+
+
+typedef uint32_t (* pfunc_draw_item1)(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3);
+pfunc_draw_item1 old_draw_item1 = NULL;
+
+typedef uint32_t (* pfunc_draw_item2)(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3, uint32_t uk4);
+pfunc_draw_item2 old_draw_item2 = NULL;
+
 
 ///////////////////////////////////////////////////////////
 typedef struct SUBSTR_ITEM_S
@@ -381,6 +394,7 @@ uint32_t parse_opcode_len(char* opcode)
 #define DEFAULT_TRANSLATE_BUFF_LEN (4096 * 5)
 static char tl_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 
+
 DECL_FUNCTION_THUMB
 char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 {
@@ -433,6 +447,30 @@ char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 }
 
 
+DECL_FUNCTION_THUMB
+char* new_scp_process_story(void* this, char* opcode, char* str, uint32_t uk)
+{
+    old_scp_process_story = (pfunc_scp_process_story)ADDR_THUMB(p_ctx_scp_process_story->old_func);
+    //DEBUG_PRINT("process story");
+    return old_scp_process_story(this, opcode, str, uk);
+}
+
+DECL_FUNCTION_THUMB
+uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3)
+{
+    old_draw_item1 = (pfunc_draw_item1)ADDR_THUMB(p_ctx_scp_draw_item1->old_func);
+    //DEBUG_PRINT("draw item1");
+    return old_draw_item1(this, uk1, uk2, str, uk3);
+}
+
+DECL_FUNCTION_THUMB
+uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3, uint32_t uk4)
+{
+    old_draw_item2 = (pfunc_draw_item2)ADDR_THUMB(p_ctx_scp_draw_item2->old_func);
+    //DEBUG_PRINT("draw item2");
+    return old_draw_item2(this, uk1, uk2, str, uk3, uk4);
+}
+
 
 ///////////////////////////////////////////////////////////
 
@@ -440,6 +478,9 @@ int init_hooks()
 {
 
 	p_ctx_scp_process_scena->new_func = (void*)ADDR_THUMB(new_scp_process_scena);
+    p_ctx_scp_process_story->new_func = (void*)ADDR_THUMB(new_scp_process_story);
+    p_ctx_scp_draw_item1->new_func = (void*)ADDR_THUMB(new_draw_item1);
+    p_ctx_scp_draw_item2->new_func = (void*)ADDR_THUMB(new_draw_item2);
 
 	return 0;
 }
