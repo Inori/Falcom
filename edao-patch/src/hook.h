@@ -9,7 +9,8 @@
 #include "translator.h"
 
 
-extern TL_CONTEXT g_tl_context;
+extern TL_CONTEXT g_tl_context_scena;
+extern TL_CONTEXT g_tl_context_sys;
 
 int init_hooks();
 

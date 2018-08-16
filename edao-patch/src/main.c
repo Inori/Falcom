@@ -6,7 +6,8 @@
 #include "tools.h"
 #include "hook.h"
 
-#define TL_MAP_FILENAME "app0:JpCnMap.acr"
+#define TL_MAP_FILENAME_SCENA "app0:scena_map.acr"
+#define TL_MAP_FILENAME_SYS "app0:sys_map.acr"
 
 int _start(SceSize args, void *argp) 
 {
@@ -17,7 +18,8 @@ int _start(SceSize args, void *argp)
 
 	DEBUG_PRINT("module start - TITLE ID: %s\n", title_id);
 
-	ret = tl_init(&g_tl_context, TL_MAP_FILENAME);
+	ret = tl_init(&g_tl_context_scena, TL_MAP_FILENAME_SCENA);
+	ret = tl_init(&g_tl_context_sys, TL_MAP_FILENAME_SYS);
 
 	ret = init_hooks();
 

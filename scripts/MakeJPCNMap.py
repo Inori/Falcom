@@ -152,14 +152,19 @@ def main():
     report_group_error = open('ReportGroupError.txt', 'w', encoding='utf16')
     report_fuzzy_match = open('ReportFuzzyMatch.txt', 'w', encoding='utf16')
 
-    vita_flist = Common.Walk('vita_jp_txt')
-    text_list = ReadVitaGroups(vita_flist)
+    # vita_flist = Common.Walk('vita_jp_txt')
+    # jp_flist = Common.Walk('psp_jp_txt')
+    # cn_flist = Common.Walk('pc_cn_txt')
 
-    jp_flist = Common.Walk('psp_jp_txt')
-    cn_flist = Common.Walk('pc_cn_txt')
+    vita_flist = Common.Walk('vita_jp_dt')
+    jp_flist = Common.Walk('psp_jp_dt')
+    cn_flist = Common.Walk('pc_cn_dt')
+
+    text_list = ReadVitaGroups(vita_flist)
     jpcn_dic, match_dic = MakeStrDic(jp_flist, cn_flist, report_group_error)
 
-    dst = open('JpCnMap.txt', 'w', encoding='utf16')
+    # dst = open('scena_map.txt', 'w', encoding='utf16')
+    dst = open('sys_map.txt', 'w', encoding='utf16')
 
     OutputMapFile(text_list, jpcn_dic, match_dic, dst, report_not_match, report_fuzzy_match)
 

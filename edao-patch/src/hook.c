@@ -21,7 +21,8 @@
 
 ///////////////////////////////////////////////////////////
 
-TL_CONTEXT g_tl_context;
+TL_CONTEXT g_tl_context_scena;
+TL_CONTEXT g_tl_context_sys;
 
 ///////////////////////////////////////////////////////////
 
@@ -196,7 +197,7 @@ void split_string(const char* string, uint32_t str_len,
 }
 
 
-void translate_string(const char* old_str, uint32_t old_len, 
+void translate_string(TL_CONTEXT* tl_ctx, const char* old_str, uint32_t old_len,
 					  char* new_str, uint32_t* new_len,
 					  SUBSTR_ITEM items[], uint32_t item_count)
 {
@@ -218,7 +219,7 @@ void translate_string(const char* old_str, uint32_t old_len,
 
 		//assert(item->sub_str == old_str + i);
 		uint32_t translate_len = *new_len - n - 1;  //will be translated length after call
-		int is_tranlated = tl_translate(&g_tl_context, 
+		int is_tranlated = tl_translate(tl_ctx,
 										item->sub_str, item->sub_len, 
 										&new_str[n], &translate_len);
 
@@ -252,7 +253,7 @@ void translate_name(char* name)
 	}
 
 	uint32_t name_len = strlen(name);
-	int tranlated = tl_translate(&g_tl_context, 
+	int tranlated = tl_translate(&g_tl_context_scena,
 				 name, name_len, 
 				 name, &name_len);
 	if (tranlated)
@@ -423,7 +424,7 @@ char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 		//dump_mem("Before:", (uint8_t*)opcode, opcode_len);
 
 		uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
-		translate_string(opcode, opcode_len, 
+		translate_string(&g_tl_context_scena, opcode, opcode_len,
 						 tl_buffer, &translate_len, 
 						 str_items, item_count);
 		tl_buffer[translate_len] = 0;
@@ -447,28 +448,118 @@ char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 }
 
 
+static char tl_buffer_story[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 DECL_FUNCTION_THUMB
 char* new_scp_process_story(void* this, char* opcode, char* str, uint32_t uk)
 {
+    char* this_opcode = NULL;
+    char* next_opcode = NULL;
+    uint32_t opcode_len = 0;
+    SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
+
+    int is_translated = 0;
+
+    do
+    {
+        if (!opcode || !*opcode)
+        {
+            this_opcode = opcode;
+            break;
+        }
+
+
+        opcode_len = parse_opcode_len(opcode);
+        uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
+        split_string(opcode, opcode_len, str_items, &item_count);
+
+        //dump_mem("Before:", (uint8_t*)opcode, opcode_len);
+
+        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
+        translate_string(&g_tl_context_sys, opcode, opcode_len,
+                         tl_buffer_story, &translate_len,
+                         str_items, item_count);
+        tl_buffer_story[translate_len] = 0;
+
+        this_opcode = tl_buffer_story;
+        is_translated = 1;
+
+        //dump_mem("After:", (uint8_t*)tl_buffer, translate_len);
+    } while(0);
+
+
     old_scp_process_story = (pfunc_scp_process_story)ADDR_THUMB(p_ctx_scp_process_story->old_func);
-    //DEBUG_PRINT("process story");
-    return old_scp_process_story(this, opcode, str, uk);
+    next_opcode = old_scp_process_story(this, this_opcode, str, uk);
+
+    if (is_translated && next_opcode != NULL)
+    {
+        next_opcode = opcode + opcode_len + 1;
+    }
+
+    return next_opcode;
 }
 
 DECL_FUNCTION_THUMB
 uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3)
 {
+    char* new_str = NULL;
+    static char cn_buffer[4096] = {0};
+
     old_draw_item1 = (pfunc_draw_item1)ADDR_THUMB(p_ctx_scp_draw_item1->old_func);
-    //DEBUG_PRINT("draw item1");
-    return old_draw_item1(this, uk1, uk2, str, uk3);
+
+    //dump_mem("draw1:", str, strlen(str));
+
+    new_str = str;
+
+    if (str && *str)
+    {
+        int old_len = strlen(str);
+        uint32_t translate_len = 0;
+        int is_tranlated = tl_translate(&g_tl_context_sys,
+                                        str, old_len,
+                                        cn_buffer, &translate_len);
+        if (is_tranlated)
+        {
+            new_str = cn_buffer;
+        }
+        else
+        {
+            new_str = "draw1 miss";
+        }
+    }
+
+    return old_draw_item1(this, uk1, uk2, new_str, uk3);
 }
 
 DECL_FUNCTION_THUMB
 uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3, uint32_t uk4)
 {
+    char* new_str = NULL;
+    static char cn_buffer[4096] = {0};
+
     old_draw_item2 = (pfunc_draw_item2)ADDR_THUMB(p_ctx_scp_draw_item2->old_func);
-    //DEBUG_PRINT("draw item2");
-    return old_draw_item2(this, uk1, uk2, str, uk3, uk4);
+
+    //dump_mem("draw1:", str, strlen(str));
+
+    new_str = str;
+
+    if (str && *str)
+    {
+        int old_len = strlen(str);
+        uint32_t translate_len = 0;
+        int is_tranlated = tl_translate(&g_tl_context_sys,
+                                        str, old_len,
+                                        cn_buffer, &translate_len);
+        if (is_tranlated)
+        {
+            new_str = cn_buffer;
+        }
+        else
+        {
+            new_str = "draw2 miss";
+        }
+    }
+
+    return old_draw_item2(this, uk1, uk2, new_str, uk3, uk4);
 }
 
 
