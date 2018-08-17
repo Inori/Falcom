@@ -502,7 +502,7 @@ DECL_FUNCTION_THUMB
 uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3)
 {
     char* new_str = NULL;
-    static char cn_buffer[4096] = {0};
+    static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 
     old_draw_item1 = (pfunc_draw_item1)ADDR_THUMB(p_ctx_scp_draw_item1->old_func);
 
@@ -513,7 +513,7 @@ uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
     if (str && *str)
     {
         int old_len = strlen(str);
-        uint32_t translate_len = 0;
+        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;
         int is_tranlated = tl_translate(&g_tl_context_sys,
                                         str, old_len,
                                         cn_buffer, &translate_len);
@@ -534,24 +534,26 @@ DECL_FUNCTION_THUMB
 uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3, uint32_t uk4)
 {
     char* new_str = NULL;
-    static char cn_buffer[4096] = {0};
+    static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 
     old_draw_item2 = (pfunc_draw_item2)ADDR_THUMB(p_ctx_scp_draw_item2->old_func);
-
-    //dump_mem("draw1:", str, strlen(str));
 
     new_str = str;
 
     if (str && *str)
     {
         int old_len = strlen(str);
-        uint32_t translate_len = 0;
+        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;
         int is_tranlated = tl_translate(&g_tl_context_sys,
                                         str, old_len,
                                         cn_buffer, &translate_len);
         if (is_tranlated)
         {
+            //dump_mem("draw2 old:", new_str, strlen(str));
             new_str = cn_buffer;
+            //dump_mem("draw2 new:", new_str, strlen(str));
+
+            //new_str = "HIJKLMN";
         }
         else
         {
