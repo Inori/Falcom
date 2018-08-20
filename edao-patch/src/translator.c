@@ -202,7 +202,7 @@ int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len,
 		    cn_str[i] = new_str[i];
         }
 
-		cn_str[copy_len] = 0;
+		//cn_str[copy_len] = 0;
 
 		translated = 1;
 	} while (0);
