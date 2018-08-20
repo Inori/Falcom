@@ -8,6 +8,7 @@
 
 #define DECL_FUNCTION_ARM __attribute__((target("arm")))
 #define DECL_FUNCTION_THUMB __attribute__((target("thumb")))
+#define DECL_FUNCTION_NOINLINE __attribute__ ((noinline))
 
 #define ASM_PUSHAD "stmfd sp!, {r0-r12}	\n\t"
 #define ASM_POPAD "ldmfd sp!, {r0-r12}	\n\t"
@@ -502,7 +503,7 @@ DECL_FUNCTION_THUMB
 uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3)
 {
     char* new_str = NULL;
-    static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
+    char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 
     old_draw_item1 = (pfunc_draw_item1)ADDR_THUMB(p_ctx_scp_draw_item1->old_func);
 
@@ -510,58 +511,101 @@ uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
 
     new_str = str;
 
-    if (str && *str)
-    {
-        int old_len = strlen(str);
-        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;
-        int is_tranlated = tl_translate(&g_tl_context_sys,
-                                        str, old_len,
-                                        cn_buffer, &translate_len);
-        if (is_tranlated)
-        {
-            new_str = cn_buffer;
-        }
-        else
-        {
-            new_str = "draw1 miss";
-        }
-    }
+//    if (str && *str)
+//    {
+//        int old_len = strlen(str);
+//        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;
+//        int is_tranlated = tl_translate(&g_tl_context_sys,
+//                                        str, old_len,
+//                                        cn_buffer, &translate_len);
+//        if (is_tranlated)
+//        {
+//            new_str = cn_buffer;
+//        }
+//        else
+//        {
+//            new_str = "draw1 miss";
+//        }
+//    }
 
     return old_draw_item1(this, uk1, uk2, new_str, uk3);
 }
 
+
+DECL_FUNCTION_NOINLINE
+uint32_t test_arg(uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4, uint32_t arg5)
+{
+    uint32_t ret = arg1 + arg2 + arg3 + arg4 + arg5;
+    uint32_t count = 0x1000000;
+    while (count--)
+    {
+        ret += count;
+    }
+    return ret + 1;
+}
+
+uint32_t bkdr_hash(const uint8_t* string, uint32_t len);
+
+DECL_FUNCTION_NOINLINE
+int test_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len,
+                 char* cn_str, uint32_t* cn_len)
+{
+    uint32_t hash = bkdr_hash((uint8_t*)jp_str, jp_len);
+    memcpy(cn_str, jp_str, jp_len);
+    return hash;
+}
+
+
+
 DECL_FUNCTION_THUMB
 uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3, uint32_t uk4)
 {
-    char* new_str = NULL;
+    //char* new_str = NULL;
     static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 
     old_draw_item2 = (pfunc_draw_item2)ADDR_THUMB(p_ctx_scp_draw_item2->old_func);
 
-    new_str = str;
+    memcpy(cn_buffer, str, strlen(str));
 
-    if (str && *str)
-    {
-        int old_len = strlen(str);
-        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;
-        int is_tranlated = tl_translate(&g_tl_context_sys,
-                                        str, old_len,
-                                        cn_buffer, &translate_len);
-        if (is_tranlated)
-        {
-            //dump_mem("draw2 old:", new_str, strlen(str));
-            new_str = cn_buffer;
-            //dump_mem("draw2 new:", new_str, strlen(str));
+    return old_draw_item2(this, uk1, uk2, str, uk3, uk4);
 
-            //new_str = "HIJKLMN";
-        }
-        else
-        {
-            new_str = "draw2 miss";
-        }
-    }
+//    new_str = str;
+//
+//    if (str && *str)
+//    {
+//        memset(cn_buffer, 0, DEFAULT_TRANSLATE_BUFF_LEN);
+//        int old_len = strlen(str);
+//        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;
+////        int is_tranlated = tl_translate(&g_tl_context_sys,
+////                                        str, old_len,
+////                                        cn_buffer, &translate_len);
+//
+//        int is_tranlated = test_translate(&g_tl_context_sys,
+//                                        str, old_len,
+//                                        cn_buffer, &translate_len);
+//
+////        int is_tranlated = test_arg((uint32_t)&g_tl_context_sys,
+////                                    (uint32_t)str, old_len,
+////                                    (uint32_t)cn_buffer, (uint32_t)&translate_len);
+////
+//        if (is_tranlated)
+//        //if (1)
+//        {
+////            dump_mem("draw2 old:", new_str, strlen(new_str) + 0x10);
+////            new_str = cn_buffer;
+////            dump_mem("draw2 new:", new_str, strlen(new_str) + 0x10);
+//
+//            //new_str = "\x96\xC8\x97\x65\x84\xB6\x96\xC8\x97\x65\x84\xB6\x00";
+//            new_str = "HIJKLMN";
+//        }
+//        else
+//        {
+//            new_str = "draw2 miss";
+//        }
+//    }
 
-    return old_draw_item2(this, uk1, uk2, new_str, uk3, uk4);
+    //return old_draw_item2(this, uk1, uk2, new_str, uk3, uk4);
+
 }
 
 

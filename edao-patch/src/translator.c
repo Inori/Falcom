@@ -193,7 +193,15 @@ int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len,
 		uint32_t copy_len = new_len < *cn_len ? new_len : *cn_len;
 		*cn_len = copy_len;
 
-		memcpy(cn_str, new_str, copy_len);
+		//seems memcpy will use NEON register without protect
+		//cause some float values in game corrupt
+		//memcpy(cn_str, new_str, copy_len);
+
+		for (int i = 0; i != copy_len; ++i)
+        {
+		    cn_str[i] = new_str[i];
+        }
+
 		cn_str[copy_len] = 0;
 
 		translated = 1;
