@@ -369,17 +369,27 @@ uint32_t parse_opcode_len(char* opcode)
 
 	do
 	{
-		str_len = strlen(code);
-		opcode_len += str_len;
-		code += (str_len - 1);
-
-		tail = *code;
-		tail_len = get_code_len(tail);
-		code += tail_len;
-
-		if (*code != 0)
+		if(*code<0x20)
 		{
-			opcode_len += (tail_len - 1);
+			tail = *code;
+			tail_len = get_code_len(tail);
+			code += tail_len;
+			opcode_len+=tail_len;
+		}
+		else
+		{
+			str_len = strlen(code);
+			if((*code+str_len-1)<0x20)
+			{
+				opcode_len+=str_len-1;
+				code+=str_len-1;
+			}
+			else
+			{
+				opcode_len += str_len;
+				code += str_len;
+			}
+			
 		}
 	} while(*code != 0);
 
