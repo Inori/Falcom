@@ -53,6 +53,6 @@ int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len,
 int tl_init_hash_map(TL_CONTEXT* ctx, uint8_t* map_buffer, uint32_t map_size);
 
 
-inline uint32_t bkdr_hash(const uint8_t* string, uint32_t len);
+uint32_t bkdr_hash(const uint8_t* string, uint32_t len);
 
 #endif //VITA_TRANSLATOR_H

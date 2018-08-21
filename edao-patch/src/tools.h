@@ -14,6 +14,14 @@
 #define ADDR_THUMB(addr) ((unsigned int)(addr) | 1)
 #define ADDR_ARM(addr) ((unsigned int)(addr) & ~1)
 
+#define DECL_INLINE_ASM_ARM __attribute__((naked, target("arm")))
+#define DECL_INLINE_ASM_THUMB __attribute__((naked, target("thumb")))
+
+#define DECL_FUNCTION_ARM __attribute__((target("arm")))
+#define DECL_FUNCTION_THUMB __attribute__((target("thumb")))
+#define DECL_FUNCTION_NOINLINE __attribute__ ((noinline))
+
+
 int get_title_id(char title_id[VITA_TITLE_ID_LEN]);
 
 void hex_to_string(unsigned char* data, int data_len, char* string, int str_len);

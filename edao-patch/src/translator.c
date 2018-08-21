@@ -150,10 +150,18 @@ int tl_init_hash_map(TL_CONTEXT* ctx, uint8_t* map_buffer, uint32_t map_size)
 }
 
 
+extern void* memcpy_neon;
+typedef void (*pfunc_memcpy_neon)(void* dst, void* src, uint32_t size);
+
+
+
 int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len, 
 				 char* cn_str, uint32_t* cn_len)
 {
 	int translated = 0;
+
+    pfunc_memcpy_neon memcpy_nn = (pfunc_memcpy_neon)ADDR_ARM(memcpy_neon);
+
 	do
 	{
 		if (!ctx)
@@ -196,6 +204,8 @@ int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len,
 		//seems memcpy will use NEON register without protect
 		//cause some float values in game corrupt
 		//memcpy(cn_str, new_str, copy_len);
+
+        //memcpy_nn(cn_str, new_str, copy_len);
 
 		for (int i = 0; i != copy_len; ++i)
         {
