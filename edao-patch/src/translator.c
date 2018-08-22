@@ -150,18 +150,10 @@ int tl_init_hash_map(TL_CONTEXT* ctx, uint8_t* map_buffer, uint32_t map_size)
 }
 
 
-//extern void* memcpy_neon;
-//typedef void (*pfunc_memcpy_neon)(void* dst, void* src, uint32_t size);
-
-void *memcpy_asm(void* dst, void* src, uint32_t size);
-
-
 int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len, 
 				 char* cn_str, uint32_t* cn_len)
 {
 	int translated = 0;
-
-    //pfunc_memcpy_neon memcpy_nn = (pfunc_memcpy_neon)ADDR_THUMB(memcpy_neon);
 
 	do
 	{
@@ -207,13 +199,12 @@ int tl_translate(TL_CONTEXT* ctx, const char* jp_str, uint32_t jp_len,
 		//memcpy(cn_str, new_str, copy_len);
 
         memcpy_asm(cn_str, new_str, copy_len);
-//
-//		for (int i = 0; i != copy_len; ++i)
-//        {
-//		    cn_str[i] = new_str[i];
-//        }
 
-		//cn_str[copy_len] = 0;
+//		for (int i = 0; i != copy_len; ++i)
+//      {
+//		    cn_str[i] = new_str[i];
+//      }
+
 
 		translated = 1;
 	} while (0);

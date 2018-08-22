@@ -36,6 +36,7 @@ void* vita_realloc(void* ptr, unsigned int size);
 
 void vita_free(void* mem);
 
+void *memcpy_asm(void* dst, void* src, uint32_t size);
 
 //string tools
 
