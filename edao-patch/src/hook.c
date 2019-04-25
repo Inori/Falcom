@@ -14,6 +14,16 @@
 	"ldr " #r ", [sp], #4		\n\t" \
 	"msr cpsr," #r "			\n\t"
 
+///////////////////////////////////////////////////////////
+
+#ifdef EDAO_HOOK_DEBUG
+
+KHASH_MAP_INIT_INT(INT_HASH_NAME, uint32_t)
+#define INT_HASH_MAP khash_t(INT_HASH_NAME)
+
+INT_HASH_MAP* not_hit_map = NULL;
+
+#endif  //EDAO_HOOK_DEBUG
 
 ///////////////////////////////////////////////////////////
 
@@ -78,7 +88,7 @@ int has_sharp(const char* string, uint32_t len)
 
 
 SUBSTR_ITEM* find_item(const char* parent_str, uint32_t position,
-					   SUBSTR_ITEM items[], uint32_t item_count)
+						 SUBSTR_ITEM items[], uint32_t item_count)
 {
 	for (uint32_t i = 0; i != item_count; ++i)
 	{
@@ -93,7 +103,7 @@ SUBSTR_ITEM* find_item(const char* parent_str, uint32_t position,
 }
 
 void split_string(const char* string, uint32_t str_len, 
-				  SUBSTR_ITEM items[], uint32_t* item_count)
+					SUBSTR_ITEM items[], uint32_t* item_count)
 {
 	if (!string || !item_count)
 	{
@@ -194,8 +204,8 @@ void split_string(const char* string, uint32_t str_len,
 
 
 void translate_string(TL_CONTEXT* tl_ctx, const char* old_str, uint32_t old_len,
-					  char* new_str, uint32_t* new_len,
-					  SUBSTR_ITEM items[], uint32_t item_count)
+						char* new_str, uint32_t* new_len,
+						SUBSTR_ITEM items[], uint32_t item_count)
 {
 	if (!old_str || !new_str)
 	{
@@ -221,12 +231,31 @@ void translate_string(TL_CONTEXT* tl_ctx, const char* old_str, uint32_t old_len,
 
 		if (is_tranlated)
 		{
-			n += translate_len;
+
+      n += translate_len;
+
 		}
 		else
 		{
 			strncpy(&new_str[n], item->sub_str, item->sub_len);
 			n += item->sub_len;
+
+#ifdef EDAO_HOOK_DEBUG
+      khint_t kret = -1;
+      uint32_t hash = bkdr_hash((uint8_t*)item->sub_str, item->sub_len);
+      khiter_t iter = kh_get(INT_HASH_NAME, not_hit_map, hash);
+      if (iter == kh_end(not_hit_map))
+      {
+          iter = kh_put(INT_HASH_NAME, not_hit_map, hash, &kret);
+          if (kret == -1)
+          {
+              DEBUG_PRINT("kh_put error.");
+          }
+          DEBUG_PRINT("translate_string not hit hash: %08X\n", hash);
+          dump_mem("translate_string not hit:", item->sub_str, item->sub_len);
+      }
+#endif  //EDAO_HOOK_DEBUG
+
 		}
 
 		if (n >= buffer_len)
@@ -264,50 +293,50 @@ From IDA:
 
 switch ( code )
 {
-  case 0:
-  	...
-    goto PROC_FINISH;
-  case 1:
-  case 0xA:
-  	...
-    ++cur_pointer;
-    next_buffer = buffer + 1;
-    goto LABEL_88;
-  case 2:
-  case 5:
-    v53 = char_rect;
-    ++cur_pointer;
-    next_buffer = buffer + 1;
-    goto LABEL_88;
-  case 3:
-  case 4:
-  	...
-    ++cur_pointer;
-    next_buffer = buffer + 1;
-    goto LABEL_88;
-  case 6:
-    ++cur_pointer;
-    ...
-    next_buffer = v60 + 1;
+	case 0:
+		...
+		goto PROC_FINISH;
+	case 1:
+	case 0xA:
+		...
+		++cur_pointer;
+		next_buffer = buffer + 1;
+		goto LABEL_88;
+	case 2:
+	case 5:
+		v53 = char_rect;
+		++cur_pointer;
+		next_buffer = buffer + 1;
+		goto LABEL_88;
+	case 3:
+	case 4:
+		...
+		++cur_pointer;
+		next_buffer = buffer + 1;
+		goto LABEL_88;
+	case 6:
+		++cur_pointer;
+		...
+		next_buffer = v60 + 1;
 
-    goto LABEL_88;
-  case 7:
-    cur_pointer += 2;
-    v58 = *text___++;
-    v59 = buffer + 1;
-    *buffer = v58;
-    buffer = v59;
-    next_buffer += 2;
-    v53 = char_rect;
-    goto LABEL_88;
-  case 0x1F:
-  	...
-    cur_pointer += 3;
-    next_buffer += 3;
-    goto PROC_FINISH;
-  default:
-    ++cur_pointer;
-    next_buffer = buffer + 1;
+		goto LABEL_88;
+	case 7:
+		cur_pointer += 2;
+		v58 = *text___++;
+		v59 = buffer + 1;
+		*buffer = v58;
+		buffer = v59;
+		next_buffer += 2;
+		v53 = char_rect;
+		goto LABEL_88;
+	case 0x1F:
+		...
+		cur_pointer += 3;
+		next_buffer += 3;
+		goto PROC_FINISH;
+	default:
+		++cur_pointer;
+		next_buffer = buffer + 1;
 }
 */
 
@@ -323,31 +352,31 @@ uint32_t get_code_len(char code)
 
 	switch (code)
 	{
-	  case 0:	//should never be here!
-	  	len = 0;
-	  	break;
-	  case 1:
-	  case 0xA:
+		case 0:	//should never be here!
+			len = 0;
+			break;
+		case 1:
+		case 0xA:
 		len = 1;
 		break;
-	  case 2:
-	  case 5:
+		case 2:
+		case 5:
 		len = 1;
 		break;
-	  case 3:
-	  case 4:
+		case 3:
+		case 4:
 		len = 1;
 		break;
-	  case 6:
+		case 6:
 		len = 1;
 		break;
-	  case 7:
+		case 7:
 		len = 2;
 		break;
-	  case 0x1F:
+		case 0x1F:
 		len = 3;
 		break;
-	  default:
+		default:
 		len = 1;
 		break;
 	}
@@ -460,83 +489,113 @@ static char tl_buffer_story[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 DECL_FUNCTION_THUMB
 char* new_scp_process_story(void* this, char* opcode, char* str, uint32_t uk)
 {
-    char* this_opcode = NULL;
-    char* next_opcode = NULL;
-    uint32_t opcode_len = 0;
-    SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
+		char* this_opcode = NULL;
+		char* next_opcode = NULL;
+		uint32_t opcode_len = 0;
+		SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
 
-    int is_translated = 0;
+		int is_translated = 0;
 
-    do
+		do
+		{
+				if (!opcode || !*opcode)
+				{
+						this_opcode = opcode;
+						break;
+				}
+
+
+				opcode_len = parse_opcode_len(opcode);
+				uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
+				split_string(opcode, opcode_len, str_items, &item_count);
+
+				//dump_mem("Before:", (uint8_t*)opcode, opcode_len);
+
+				uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
+				translate_string(&g_tl_context_sys, opcode, opcode_len,
+												 tl_buffer_story, &translate_len,
+												 str_items, item_count);
+				tl_buffer_story[translate_len] = 0;
+
+				this_opcode = tl_buffer_story;
+				is_translated = 1;
+
+				//dump_mem("After:", (uint8_t*)tl_buffer, translate_len);
+		} while(0);
+
+
+		old_scp_process_story = (pfunc_scp_process_story)ADDR_THUMB(p_ctx_scp_process_story->old_func);
+		next_opcode = old_scp_process_story(this, this_opcode, str, uk);
+
+		if (is_translated && next_opcode != NULL)
+		{
+				next_opcode = opcode + opcode_len + 1;
+		}
+
+		return next_opcode;
+}
+
+const char* try_rip_string(const char* old_str, int old_len, int* out_len)
+{
+    const char* trans_str = old_str;
+    int trans_len = old_len;
+    const char* str_end = old_str + old_len;
+    // find " 】", and if it's next char is the first byte of sjis wide char
+    // we rebase the string pointer to the char next to "】"
+    const char* rip_str = strstr(old_str, "\x20\x81\x7A");
+    if (rip_str)
     {
-        if (!opcode || !*opcode)
+        rip_str += 3;
+        if (rip_str < str_end)
         {
-            this_opcode = opcode;
-            break;
+            char ch = *rip_str;
+            if ((ch >= 0x81 && ch <= 0x9F) ||
+                (ch >= 0xE0 && ch <= 0xEF))
+                {
+                    trans_str = rip_str;
+                    trans_len = old_len - (rip_str - old_str);
+                } 
         }
-
-
-        opcode_len = parse_opcode_len(opcode);
-        uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
-        split_string(opcode, opcode_len, str_items, &item_count);
-
-        //dump_mem("Before:", (uint8_t*)opcode, opcode_len);
-
-        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
-        translate_string(&g_tl_context_sys, opcode, opcode_len,
-                         tl_buffer_story, &translate_len,
-                         str_items, item_count);
-        tl_buffer_story[translate_len] = 0;
-
-        this_opcode = tl_buffer_story;
-        is_translated = 1;
-
-        //dump_mem("After:", (uint8_t*)tl_buffer, translate_len);
-    } while(0);
-
-
-    old_scp_process_story = (pfunc_scp_process_story)ADDR_THUMB(p_ctx_scp_process_story->old_func);
-    next_opcode = old_scp_process_story(this, this_opcode, str, uk);
-
-    if (is_translated && next_opcode != NULL)
-    {
-        next_opcode = opcode + opcode_len + 1;
     }
 
-    return next_opcode;
+    *out_len = trans_len;
+    return trans_str;
 }
 
 DECL_FUNCTION_THUMB
 uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3)
 {
-    char* new_str = NULL;
-    static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
+		char* new_str = NULL;
+		static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
+    SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
 
-    old_draw_item1 = (pfunc_draw_item1)ADDR_THUMB(p_ctx_scp_draw_item1->old_func);
+		old_draw_item1 = (pfunc_draw_item1)ADDR_THUMB(p_ctx_scp_draw_item1->old_func);
 
-    //dump_mem("draw1:", str, strlen(str));
+		//dump_mem("draw1:", str, strlen(str));
+		//DEBUG_PRINT("draw1 uk1 %X uk2 %X uk3 %X\n", uk1, uk2, uk3);
 
-    new_str = str;
+		new_str = str;
 
     if (str && *str)
     {
         int old_len = strlen(str);
-        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;
-        int is_tranlated = tl_translate(&g_tl_context_sys,
-                                        str, old_len,
-                                        cn_buffer, &translate_len);
-        if (is_tranlated)
-        {
-            cn_buffer[translate_len] = 0;
-            new_str = cn_buffer;
-        }
-        else
-        {
-            new_str = "draw1 miss";
-        }
+        
+        uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
+
+        int trans_len = old_len;
+        const char* trans_str = try_rip_string(str, old_len, &trans_len);
+				split_string(trans_str, trans_len, str_items, &item_count);
+
+				uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;  //will be real tranlated len after call
+				translate_string(&g_tl_context_sys, str, old_len,
+												 cn_buffer, &translate_len,
+												 str_items, item_count);
+
+        cn_buffer[translate_len] = 0;
+        new_str = cn_buffer;
     }
 
-    return old_draw_item1(this, uk1, uk2, new_str, uk3);
+		return old_draw_item1(this, uk1, uk2, new_str, uk3);
 }
 
 
@@ -546,6 +605,8 @@ uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
 {
     char* new_str = NULL;
     static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
+
+    //DEBUG_PRINT("draw2 uk1 %X uk2 %X uk3 %X uk4 %X\n", uk1, uk2, uk3, uk4);
 
     new_str = str;
 
@@ -563,12 +624,29 @@ uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
             //dump_mem("draw2 old:", new_str, strlen(new_str) + 0x10);
             cn_buffer[translate_len] = 0;
             new_str = cn_buffer;
-            //dump_mem("draw2 new:", new_str, strlen(new_str) + 0x10);
-            //new_str = "HIJKLMN";
         }
         else
         {
-            new_str = "draw2 miss";
+            // new_str = "draw2 miss";
+            new_str = str;
+
+#ifdef EDAO_HOOK_DEBUG
+            khint_t kret = -1;
+            uint32_t hash = bkdr_hash((uint8_t*)str, old_len);
+            khiter_t iter = kh_get(INT_HASH_NAME, not_hit_map, hash);
+            if (iter == kh_end(not_hit_map))
+            {
+                iter = kh_put(INT_HASH_NAME, not_hit_map, hash, &kret);
+                if (kret == -1)
+                {
+                    DEBUG_PRINT("kh_put error.");
+                }
+                kh_val(not_hit_map, iter) = 0;
+                DEBUG_PRINT("draw2 not hit hash: %08X\n", hash);
+                dump_mem("draw2 not hit:", str, old_len);
+            }
+#endif  //EDAO_HOOK_DEBUG
+
         }
     }
 
@@ -583,10 +661,17 @@ uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
 int init_hooks()
 {
 
-	p_ctx_scp_process_scena->new_func = (void*)ADDR_THUMB(new_scp_process_scena);
-    p_ctx_scp_process_story->new_func = (void*)ADDR_THUMB(new_scp_process_story);
-    p_ctx_scp_draw_item1->new_func = (void*)ADDR_THUMB(new_draw_item1);
-    p_ctx_scp_draw_item2->new_func = (void*)ADDR_THUMB(new_draw_item2);
+		p_ctx_scp_process_scena->new_func = (void*)ADDR_THUMB(new_scp_process_scena);
+		p_ctx_scp_process_story->new_func = (void*)ADDR_THUMB(new_scp_process_story);
+		p_ctx_scp_draw_item1->new_func = (void*)ADDR_THUMB(new_draw_item1);
+		p_ctx_scp_draw_item2->new_func = (void*)ADDR_THUMB(new_draw_item2);
+
+#ifdef EDAO_HOOK_DEBUG
+
+    not_hit_map = kh_init(INT_HASH_NAME);
+    DEBUG_PRINT("not_hit_map %p\n", not_hit_map);
+
+#endif  //EDAO_HOOK_DEBUG
 
 	return 0;
 }

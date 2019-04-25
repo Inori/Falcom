@@ -1,5 +1,20 @@
+# -*-coding:utf-8-*-
 import Common
 from fuzzywuzzy import fuzz
+
+# t_ittxt._dt和t_ittxt2._dt里
+# 有类似
+# 【HP5％回復 「戦闘不能」解除】{09}{09}{09}{09}\n　早くて安くて美味い。最も親しまれている東方料理。--【HP回复5％ 「战斗不能」解除】\n　简单便宜又美味，是最为普及的东方料理。
+# 这样的文本，要特殊处理一下
+def ProcessITTXTCNText(jp_text, cn_text):
+    new_cn_text = cn_text
+    if (('【' in jp_text and '】' in jp_text) or ('「' in jp_text and '」' in jp_text)) \
+            and '{09}' in jp_text \
+            and '\\n' in jp_text:
+        pos = cn_text.find('\\n')
+        new_cn_text = cn_text[:pos] + '{09}' + cn_text[pos:]
+    return new_cn_text
+
 
 def MakeStrDic(psp_jp_files, pc_cn_files, report):
 
@@ -40,6 +55,9 @@ def MakeStrDic(psp_jp_files, pc_cn_files, report):
 
             if (not jp_text) and (not cn_text):
                 continue
+
+            if 't_ittxt' in fname:
+                cn_text = ProcessITTXTCNText(jp_text, cn_text)
 
             jp_group = Common.SplitString(jp_text)
             cn_group = Common.SplitString(cn_text)
@@ -139,9 +157,9 @@ def OutputMapFile(text_list, jpcn_dic, match_dic, dst_file, report_not_match, re
             if not matched_line:
                 report_not_match.write('{}:{}\n'.format(fname, key_str))
                 continue
-            key_str = matched_line
-
-        value_str = jpcn_dic[key_str]
+            value_str = jpcn_dic[matched_line]
+        else:
+            value_str = jpcn_dic[key_str]
         dst_file.write(FormatString(idx, key_str, value_str))
         idx += 1
 

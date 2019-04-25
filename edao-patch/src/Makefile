@@ -1,6 +1,6 @@
 TARGET  = asuka_patch
 TITLE_ID = PCSG00246
-PSVITAIP = 192.168.1.8
+PSVITAIP = 192.168.31.183
 
 OBJS = $(patsubst %.c, %.o, $(wildcard *.c)) $(patsubst %.S, %.o, $(wildcard *.S))
 HEADERS = $(wildcard *.h)

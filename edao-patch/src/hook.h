@@ -8,6 +8,7 @@
 #include "tools.h"
 #include "translator.h"
 
+#define EDAO_HOOK_DEBUG
 
 extern TL_CONTEXT g_tl_context_scena;
 extern TL_CONTEXT g_tl_context_sys;
