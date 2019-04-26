@@ -44,6 +44,7 @@ hook_context* p_ctx_scp_process_scena = (hook_context*)0x8127C9A8;
 hook_context* p_ctx_scp_process_story = (hook_context*)0x8127C9B0;
 hook_context* p_ctx_scp_draw_item1 = (hook_context*)0x8127C9B8;
 hook_context* p_ctx_scp_draw_item2 = (hook_context*)0x8127C9C0;
+hook_context* p_ctx_scp_process_text = (hook_context*)0x8127C9C8;
 
 
 typedef char* (* pfunc_scp_process_scena) (void* this, char* opcode, char* name, uint32_t uk);
@@ -52,12 +53,16 @@ pfunc_scp_process_scena old_scp_process_scena = NULL;
 typedef char* (* pfunc_scp_process_story) (void* this, char* opcode, char* str, uint32_t uk);
 pfunc_scp_process_story old_scp_process_story = NULL;
 
-
 typedef uint32_t (* pfunc_draw_item1)(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3);
 pfunc_draw_item1 old_draw_item1 = NULL;
 
 typedef uint32_t (* pfunc_draw_item2)(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3, uint32_t uk4);
 pfunc_draw_item2 old_draw_item2 = NULL;
+
+typedef uint32_t (* pfunc_scp_process_text) (void* this, uint32_t uk1, uint32_t uk2, char* str, 
+                                          uint32_t uk3, uint32_t uk4, uint32_t uk5, uint32_t uk6,
+                                          uint32_t uk7, uint32_t uk8);
+pfunc_scp_process_text old_scp_process_text = NULL;
 
 
 ///////////////////////////////////////////////////////////
@@ -595,6 +600,7 @@ uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
         new_str = cn_buffer;
     }
 
+
 		return old_draw_item1(this, uk1, uk2, new_str, uk3);
 }
 
@@ -650,9 +656,62 @@ uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
         }
     }
 
+
     old_draw_item2 = (pfunc_draw_item2)ADDR_THUMB(p_ctx_scp_draw_item2->old_func);
     return old_draw_item2(this, uk1, uk2, new_str, uk3, uk4);
 
+}
+
+
+DECL_FUNCTION_THUMB
+uint32_t new_scp_process_text(void* this, uint32_t uk1, uint32_t uk2, char* str, 
+                              uint32_t uk3, uint32_t uk4, uint32_t uk5, uint32_t uk6,
+                              uint32_t uk7, uint32_t uk8)
+{
+    char* new_str = NULL;
+    static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
+
+    new_str = str;
+
+    if (str && *str)
+    {
+        memset(cn_buffer, 0, DEFAULT_TRANSLATE_BUFF_LEN);
+        int old_len = strlen(str);
+        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;
+        int is_tranlated = tl_translate(&g_tl_context_sys,
+                                        str, old_len,
+                                        cn_buffer, &translate_len);
+
+        if (is_tranlated)
+        {
+            cn_buffer[translate_len] = 0;
+            new_str = cn_buffer;
+        }
+        else
+        {
+            new_str = str;
+
+#ifdef EDAO_HOOK_DEBUG
+            khint_t kret = -1;
+            uint32_t hash = bkdr_hash((uint8_t*)str, old_len);
+            khiter_t iter = kh_get(INT_HASH_NAME, not_hit_map, hash);
+            if (iter == kh_end(not_hit_map))
+            {
+                iter = kh_put(INT_HASH_NAME, not_hit_map, hash, &kret);
+                if (kret == -1)
+                {
+                    DEBUG_PRINT("kh_put error.");
+                }
+                kh_val(not_hit_map, iter) = 0;
+                DEBUG_PRINT("draw2 not hit hash: %08X\n", hash);
+                dump_mem("draw2 not hit:", str, old_len);
+            }
+#endif  //EDAO_HOOK_DEBUG
+
+        }
+    }
+    old_scp_process_text = (pfunc_scp_process_text)ADDR_THUMB(p_ctx_scp_process_text->old_func);
+    return old_scp_process_text(this, uk1, uk2, new_str, uk3, uk4, uk5, uk6, uk7, uk8);
 }
 
 
@@ -665,6 +724,7 @@ int init_hooks()
 		p_ctx_scp_process_story->new_func = (void*)ADDR_THUMB(new_scp_process_story);
 		p_ctx_scp_draw_item1->new_func = (void*)ADDR_THUMB(new_draw_item1);
 		p_ctx_scp_draw_item2->new_func = (void*)ADDR_THUMB(new_draw_item2);
+    p_ctx_scp_process_text->new_func = (void*)ADDR_THUMB(new_scp_process_text);
 
 #ifdef EDAO_HOOK_DEBUG
 

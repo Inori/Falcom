@@ -115,14 +115,26 @@ test_label:
 
 jmp_stub_stack_arg:
 	push {r6-r8, lr}
+    sub sp, sp, #0x18
 
-    sub sp, sp, #8
     # save 5th arg
-    ldr r6, [sp, #0x18]
+    ldr r6, [sp, #0x28]
     str r6, [sp]
     # save 6th arg
-    ldr r6, [sp, #0x1c]
+    ldr r6, [sp, #0x2c]
     str r6, [sp, #4]
+	# save 7th arg
+    ldr r6, [sp, #0x30]
+    str r6, [sp, #8]
+	# save 8th arg
+    ldr r6, [sp, #0x34]
+    str r6, [sp, #0xc]
+	# save 9th arg
+    ldr r6, [sp, #0x38]
+    str r6, [sp, #0x10]
+	# save 10th arg
+    ldr r6, [sp, #0x3c]
+    str r6, [sp, #0x14]
 
 	# get function table address
 	adr r6, FUNC_TABLE_2
@@ -139,7 +151,7 @@ jmp_stub_stack_arg:
 
 	# call our new function
 	blx r7
-	add sp, sp, #8
+	add sp, sp, #0x18
 	pop {r6-r8, pc}
 
 FUNC_TABLE_2:
@@ -151,100 +163,6 @@ OLD_FUNC_2:
 
 	ldr.w pc, [pc, #0]
 	.word 0x22222222
-
-.arm
-
-memcpy_neon:
-		cmp	r2, #16
-		bge	3f
-
-		/* Do small memory copies (up to 15 bytes) using ARM */
-		push	{r0, lr}
-		subs	r2, r2, #2
-		blt	2f
-1:		ldrb	r3, [r1], #1
-		ldrb	lr, [r1], #1
-		subs	r2, r2, #2
-		strb	r3, [r0], #1
-		strb	lr, [r0], #1
-		bge	1b
-2:		cmp	r2, #-1
-		ldrbeq	r3, [r1], #1
-		strbeq	r3, [r0], #1
-		pop	{r0, pc}
-3:
-		/* Do bigger memory copies using NEON instructions */
-		mov	ip, r0
-		tst	r0, #1
-		beq	1f
-		vld1.8	{d0[0]}, [r1]!
-		vst1.8	{d0[0]}, [ip]!
-		sub	r2, r2, #1
-1:
-		tst	ip, #2
-		beq	1f
-		vld2.8	{d0[0], d1[0]}, [r1]!
-		vst2.8	{d0[0], d1[0]}, [ip]!
-		sub	r2, r2, #2
-1:
-		tst	ip, #4
-		beq	1f
-		vld4.8	{d0[0], d1[0], d2[0], d3[0]}, [r1]!
-		vst4.8	{d0[0], d1[0], d2[0], d3[0]}, [ip, :32]!
-		sub	r2, r2, #4
-1:
-		tst	ip, #8
-		beq	1f
-		vld1.8	{d0}, [r1]!
-		vst1.8	{d0}, [ip, :64]!
-		sub	r2, r2, #8
-1:
-		subs	r2, r2, #32
-		blt	3f
-		mov	r3, #32
-1:
-		vld1.8	{d0-d3}, [r1]!
-		cmp	r3, #(320 - 32)
-		pld	[r1, r3]
-		addle	r3, r3, #32
-		sub	r2, r2, #32
-		vst1.8	{d0-d3}, [ip, :128]!
-		cmp	r2, r3
-		bge	1b
-		cmp	r2, #0
-		blt	3f
-1:
-		vld1.8	{d0-d3}, [r1]!
-		subs	r2, r2, #32
-		vst1.8	{d0-d3}, [ip, :128]!
-		bge	1b
-3:
-		tst	r2, #16
-		beq	1f
-		vld1.8	{d0, d1}, [r1]!
-		vst1.8	{d0, d1}, [ip, :128]!
-1:
-		tst	r2, #8
-		beq	1f
-		vld1.8	{d0}, [r1]!
-		vst1.8	{d0}, [ip, :64]!
-1:
-		tst	r2, #4
-		beq	1f
-		vld4.8	{d0[0], d1[0], d2[0], d3[0]}, [r1]!
-		vst4.8	{d0[0], d1[0], d2[0], d3[0]}, [ip, :32]!
-1:
-		tst	r2, #2
-		beq	1f
-		vld2.8	{d0[0], d1[0]}, [r1]!
-		vst2.8	{d0[0], d1[0]}, [ip]!
-1:
-		tst	r2, #1
-		beq	1f
-		vld1.8	{d0[0]}, [r1]!
-		vst1.8	{d0[0]}, [ip]!
-1:
-		bx	lr
 
 
 
