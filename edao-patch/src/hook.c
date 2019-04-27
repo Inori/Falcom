@@ -441,52 +441,56 @@ static char tl_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 DECL_FUNCTION_THUMB
 char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 {
-	char* this_opcode = NULL;
-	char* next_opcode = NULL;
-	uint32_t opcode_len = 0;
-	SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
 
-	int is_translated = 0;
+  old_scp_process_scena = (pfunc_scp_process_scena)ADDR_THUMB(p_ctx_scp_process_scena->old_func);
+	return old_scp_process_scena(this, opcode, name, uk);
 
-	do
-	{
-		if (!opcode || !*opcode)
-		{		
-			this_opcode = opcode;
-			break;
-		}
+	// char* this_opcode = NULL;
+	// char* next_opcode = NULL;
+	// uint32_t opcode_len = 0;
+	// SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
 
+	// int is_translated = 0;
 
-		translate_name(name);
-
-	 	opcode_len = parse_opcode_len(opcode);
-		uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
-		split_string(opcode, opcode_len, str_items, &item_count);
-
-		//dump_mem("Before:", (uint8_t*)opcode, opcode_len);
-
-		uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
-		translate_string(&g_tl_context_scena, opcode, opcode_len,
-						 tl_buffer, &translate_len, 
-						 str_items, item_count);
-		tl_buffer[translate_len] = 0;
-
-		this_opcode = tl_buffer;
-	 	is_translated = 1;
-
-		//dump_mem("After:", (uint8_t*)tl_buffer, translate_len);
-	} while(0);
+	// do
+	// {
+	// 	if (!opcode || !*opcode)
+	// 	{		
+	// 		this_opcode = opcode;
+	// 		break;
+	// 	}
 
 
-	old_scp_process_scena = (pfunc_scp_process_scena)ADDR_THUMB(p_ctx_scp_process_scena->old_func);
-	next_opcode = old_scp_process_scena(this, this_opcode, name, uk);
+	// 	translate_name(name);
 
-	if (is_translated && next_opcode != NULL)
-	{
-		next_opcode = opcode + opcode_len + 1;
-	}
+	//  	opcode_len = parse_opcode_len(opcode);
+	// 	uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
+	// 	split_string(opcode, opcode_len, str_items, &item_count);
 
-	return next_opcode;
+	// 	//dump_mem("Before:", (uint8_t*)opcode, opcode_len);
+
+	// 	uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
+	// 	translate_string(&g_tl_context_scena, opcode, opcode_len,
+	// 					 tl_buffer, &translate_len, 
+	// 					 str_items, item_count);
+	// 	tl_buffer[translate_len] = 0;
+
+	// 	this_opcode = tl_buffer;
+	//  	is_translated = 1;
+
+	// 	//dump_mem("After:", (uint8_t*)tl_buffer, translate_len);
+	// } while(0);
+
+
+	// old_scp_process_scena = (pfunc_scp_process_scena)ADDR_THUMB(p_ctx_scp_process_scena->old_func);
+	// next_opcode = old_scp_process_scena(this, this_opcode, name, uk);
+
+	// if (is_translated && next_opcode != NULL)
+	// {
+	// 	next_opcode = opcode + opcode_len + 1;
+	// }
+
+	// return next_opcode;
 }
 
 
@@ -494,84 +498,62 @@ static char tl_buffer_story[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 DECL_FUNCTION_THUMB
 char* new_scp_process_story(void* this, char* opcode, char* str, uint32_t uk)
 {
-		char* this_opcode = NULL;
-		char* next_opcode = NULL;
-		uint32_t opcode_len = 0;
-		SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
 
-		int is_translated = 0;
+  	old_scp_process_story = (pfunc_scp_process_story)ADDR_THUMB(p_ctx_scp_process_story->old_func);
+		return old_scp_process_story(this, opcode, str, uk);
 
-		do
-		{
-				if (!opcode || !*opcode)
-				{
-						this_opcode = opcode;
-						break;
-				}
+		// char* this_opcode = NULL;
+		// char* next_opcode = NULL;
+		// uint32_t opcode_len = 0;
+		// SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
 
+		// int is_translated = 0;
 
-				opcode_len = parse_opcode_len(opcode);
-				uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
-				split_string(opcode, opcode_len, str_items, &item_count);
-
-				//dump_mem("Before:", (uint8_t*)opcode, opcode_len);
-
-				uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
-				translate_string(&g_tl_context_sys, opcode, opcode_len,
-												 tl_buffer_story, &translate_len,
-												 str_items, item_count);
-				tl_buffer_story[translate_len] = 0;
-
-				this_opcode = tl_buffer_story;
-				is_translated = 1;
-
-				//dump_mem("After:", (uint8_t*)tl_buffer, translate_len);
-		} while(0);
+		// do
+		// {
+		// 		if (!opcode || !*opcode)
+		// 		{
+		// 				this_opcode = opcode;
+		// 				break;
+		// 		}
 
 
-		old_scp_process_story = (pfunc_scp_process_story)ADDR_THUMB(p_ctx_scp_process_story->old_func);
-		next_opcode = old_scp_process_story(this, this_opcode, str, uk);
+		// 		opcode_len = parse_opcode_len(opcode);
+		// 		uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
+		// 		split_string(opcode, opcode_len, str_items, &item_count);
 
-		if (is_translated && next_opcode != NULL)
-		{
-				next_opcode = opcode + opcode_len + 1;
-		}
+		// 		//dump_mem("Before:", (uint8_t*)opcode, opcode_len);
 
-		return next_opcode;
+		// 		uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
+		// 		translate_string(&g_tl_context_sys, opcode, opcode_len,
+		// 										 tl_buffer_story, &translate_len,
+		// 										 str_items, item_count);
+		// 		tl_buffer_story[translate_len] = 0;
+
+		// 		this_opcode = tl_buffer_story;
+		// 		is_translated = 1;
+
+		// 		//dump_mem("After:", (uint8_t*)tl_buffer, translate_len);
+		// } while(0);
+
+
+		// old_scp_process_story = (pfunc_scp_process_story)ADDR_THUMB(p_ctx_scp_process_story->old_func);
+		// next_opcode = old_scp_process_story(this, this_opcode, str, uk);
+
+		// if (is_translated && next_opcode != NULL)
+		// {
+		// 		next_opcode = opcode + opcode_len + 1;
+		// }
+
+		// return next_opcode;
 }
 
-const char* try_rip_string(const char* old_str, int old_len, int* out_len)
-{
-    const char* trans_str = old_str;
-    int trans_len = old_len;
-    const char* str_end = old_str + old_len;
-    // find " 】", and if it's next char is the first byte of sjis wide char
-    // we rebase the string pointer to the char next to "】"
-    const char* rip_str = strstr(old_str, "\x20\x81\x7A");
-    if (rip_str)
-    {
-        rip_str += 3;
-        if (rip_str < str_end)
-        {
-            char ch = *rip_str;
-            if ((ch >= 0x81 && ch <= 0x9F) ||
-                (ch >= 0xE0 && ch <= 0xEF))
-                {
-                    trans_str = rip_str;
-                    trans_len = old_len - (rip_str - old_str);
-                } 
-        }
-    }
-
-    *out_len = trans_len;
-    return trans_str;
-}
 
 DECL_FUNCTION_THUMB
 uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3)
 {
 		char* new_str = NULL;
-		static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
+		static char trans_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
     SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
 
 		old_draw_item1 = (pfunc_draw_item1)ADDR_THUMB(p_ctx_scp_draw_item1->old_func);
@@ -581,24 +563,24 @@ uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
 
 		new_str = str;
 
-    if (str && *str)
-    {
-        int old_len = strlen(str);
+    // if (str && *str)
+    // {
+    //     int old_len = strlen(str);
         
-        uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
+    //     uint32_t item_count = SUBSTR_ITEM_MAX;  //will be real count after call
 
-        int trans_len = old_len;
-        const char* trans_str = try_rip_string(str, old_len, &trans_len);
-				split_string(trans_str, trans_len, str_items, &item_count);
+    //     int trans_len = old_len;
+    //     const char* trans_str = try_rip_string(str, old_len, &trans_len);
+		// 		split_string(trans_str, trans_len, str_items, &item_count);
 
-				uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;  //will be real tranlated len after call
-				translate_string(&g_tl_context_sys, str, old_len,
-												 cn_buffer, &translate_len,
-												 str_items, item_count);
+		// 		uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;  //will be real tranlated len after call
+		// 		translate_string(&g_tl_context_sys, str, old_len,
+		// 										 trans_buffer, &translate_len,
+		// 										 str_items, item_count);
 
-        cn_buffer[translate_len] = 0;
-        new_str = cn_buffer;
-    }
+    //     trans_buffer[translate_len] = 0;
+    //     new_str = trans_buffer;
+    // }
 
 
 		return old_draw_item1(this, uk1, uk2, new_str, uk3);
@@ -610,56 +592,86 @@ DECL_FUNCTION_THUMB
 uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint32_t uk3, uint32_t uk4)
 {
     char* new_str = NULL;
-    static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
+    static char trans_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 
     //DEBUG_PRINT("draw2 uk1 %X uk2 %X uk3 %X uk4 %X\n", uk1, uk2, uk3, uk4);
 
     new_str = str;
 
-    if (str && *str)
-    {
-        memset(cn_buffer, 0, DEFAULT_TRANSLATE_BUFF_LEN);
-        int old_len = strlen(str);
-        uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;
-        int is_tranlated = tl_translate(&g_tl_context_sys,
-                                        str, old_len,
-                                        cn_buffer, &translate_len);
-
-        if (is_tranlated)
-        {
-            //dump_mem("draw2 old:", new_str, strlen(new_str) + 0x10);
-            cn_buffer[translate_len] = 0;
-            new_str = cn_buffer;
-        }
-        else
-        {
-            // new_str = "draw2 miss";
-            new_str = str;
-
-#ifdef EDAO_HOOK_DEBUG
-            khint_t kret = -1;
-            uint32_t hash = bkdr_hash((uint8_t*)str, old_len);
-            khiter_t iter = kh_get(INT_HASH_NAME, not_hit_map, hash);
-            if (iter == kh_end(not_hit_map))
-            {
-                iter = kh_put(INT_HASH_NAME, not_hit_map, hash, &kret);
-                if (kret == -1)
-                {
-                    DEBUG_PRINT("kh_put error.");
-                }
-                kh_val(not_hit_map, iter) = 0;
-                DEBUG_PRINT("draw2 not hit hash: %08X\n", hash);
-                dump_mem("draw2 not hit:", str, old_len);
-            }
-#endif  //EDAO_HOOK_DEBUG
-
-        }
-    }
+//     if (str && *str)
+//     {
+//         memset(trans_buffer, 0, DEFAULT_TRANSLATE_BUFF_LEN);
+//         int old_len = strlen(str);
+//         uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;
+//         int is_tranlated = tl_translate(&g_tl_context_sys,
+//                                         str, old_len,
+//                                         trans_buffer, &translate_len);
+//         if (is_tranlated)
+//         {
+//             //dump_mem("draw2 old:", new_str, strlen(new_str) + 0x10);
+//             trans_buffer[translate_len] = 0;
+//             new_str = trans_buffer;
+//         }
+//         else
+//         {
+//             // new_str = "draw2 miss";
+//             new_str = str;
+// #ifdef EDAO_HOOK_DEBUG
+//             khint_t kret = -1;
+//             uint32_t hash = bkdr_hash((uint8_t*)str, old_len);
+//             khiter_t iter = kh_get(INT_HASH_NAME, not_hit_map, hash);
+//             if (iter == kh_end(not_hit_map))
+//             {
+//                 iter = kh_put(INT_HASH_NAME, not_hit_map, hash, &kret);
+//                 if (kret == -1)
+//                 {
+//                     DEBUG_PRINT("kh_put error.");
+//                 }
+//                 kh_val(not_hit_map, iter) = 0;
+//                 DEBUG_PRINT("draw2 not hit hash: %08X\n", hash);
+//                 dump_mem("draw2 not hit:", str, old_len);
+//             }
+// #endif  //EDAO_HOOK_DEBUG
+//         }
+//     }
 
 
     old_draw_item2 = (pfunc_draw_item2)ADDR_THUMB(p_ctx_scp_draw_item2->old_func);
     return old_draw_item2(this, uk1, uk2, new_str, uk3, uk4);
 
+}
+
+
+int try_rip_string(const char* old_str, int old_len, char**out_str, int* out_len, int* rip_len)
+{
+    int is_riped = 0;
+    const char* trans_str = old_str;
+    int trans_len = old_len;
+    
+    const char tag[3] = {0x20, 0x81, 0x7A};  //" 】"
+
+    // if the 2 3 4 bytes of str is " 】", and if it's next char is the first byte of sjis wide char
+    // we rebase the string pointer to the char next to "】"
+    if (old_len > 4)
+    {
+        if ( !memcmp(&old_str[1], tag, sizeof(tag)) )
+        {
+            const char* rip_str = &old_str[4];
+            char ch = *rip_str;
+            if ((ch >= 0x81 && ch <= 0x9F) ||
+                (ch >= 0xE0 && ch <= 0xEF))
+            {
+                trans_str = rip_str;
+                trans_len = old_len - (rip_str - old_str);
+                is_riped = 1;
+                *rip_len = 4;
+            }
+        }
+    }
+
+    *out_str = trans_str;
+    *out_len = trans_len;
+    return is_riped;
 }
 
 
@@ -669,23 +681,40 @@ uint32_t new_scp_process_text(void* this, uint32_t uk1, uint32_t uk2, char* str,
                               uint32_t uk7, uint32_t uk8)
 {
     char* new_str = NULL;
-    static char cn_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
+    static char trans_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
+    static char tmp_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 
     new_str = str;
 
     if (str && *str)
     {
-        memset(cn_buffer, 0, DEFAULT_TRANSLATE_BUFF_LEN);
+        //memset(trans_buffer, 0, DEFAULT_TRANSLATE_BUFF_LEN);
         int old_len = strlen(str);
+
+        char* trans_str = str;
+        int trans_len = old_len;
+        int rip_len = 0;
+        int is_riped = try_rip_string(str, old_len, &trans_str, &trans_len, &rip_len);
+
         uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;
         int is_tranlated = tl_translate(&g_tl_context_sys,
-                                        str, old_len,
-                                        cn_buffer, &translate_len);
+                                        trans_str, trans_len,
+                                        trans_buffer, &translate_len);
 
         if (is_tranlated)
         {
-            cn_buffer[translate_len] = 0;
-            new_str = cn_buffer;
+            if (is_riped)
+            {
+                memcpy(tmp_buffer, str, rip_len);
+                memcpy(&tmp_buffer[rip_len], trans_buffer, translate_len);
+                tmp_buffer[rip_len + translate_len] = 0;
+                new_str = tmp_buffer;
+            }
+            else
+            {
+                trans_buffer[translate_len] = 0;
+                new_str = trans_buffer;
+            }
         }
         else
         {
@@ -703,8 +732,8 @@ uint32_t new_scp_process_text(void* this, uint32_t uk1, uint32_t uk2, char* str,
                     DEBUG_PRINT("kh_put error.");
                 }
                 kh_val(not_hit_map, iter) = 0;
-                DEBUG_PRINT("draw2 not hit hash: %08X\n", hash);
-                dump_mem("draw2 not hit:", str, old_len);
+                DEBUG_PRINT("process_text not hit hash: %08X\n", hash);
+                dump_mem("process_text not hit str:", str, old_len);
             }
 #endif  //EDAO_HOOK_DEBUG
 

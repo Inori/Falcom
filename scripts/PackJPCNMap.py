@@ -97,10 +97,21 @@ def BKDRHash(bytes):
     return (hash & 0x7FFFFFFF)
 
 
-def WriteString(src, oldstr_list, newstr_list, ct):
+def WriteString(src, oldstr_list, newstr_list, ct, report):
     index = []
     for oldstr, newstr in zip(oldstr_list, newstr_list):
-        bstring = oldstr.encode('sjis', errors='ignore')
+
+        # bstring = oldstr.encode('sjis', errors='ignore')
+        try:
+            bstring = oldstr.encode('cp932')
+        except Exception as e:
+            bstring = oldstr.encode('cp932', errors='ignore')
+            sjis_string = bstring.decode('cp932')
+            log = '{} -- {}'.format(oldstr, sjis_string)
+            report.write(log + '\n')
+            print(e)
+            print(log)
+
         hash = BKDRHash(bstring)
 
         newoff = src.tell()
@@ -128,6 +139,7 @@ def Main():
 
     txt = open(text_filename, 'r', encoding='utf16')
     dst = open(pac_filename, 'wb')
+    report = open('ReportEncodeError.txt', 'w', encoding='utf16')
 
     lines = txt.readlines()
 
@@ -142,7 +154,7 @@ def Main():
 
     index_count = len(newstr_list)
     dst.seek(HEADERLEN + index_count * INDEXLEN)
-    index_list, filesize = WriteString(dst, oldstr_list, newstr_list, ct)
+    index_list, filesize = WriteString(dst, oldstr_list, newstr_list, ct, report)
 
     dst.seek(HEADERLEN)
     WriteIndex(dst, index_list)

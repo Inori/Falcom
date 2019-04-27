@@ -17,6 +17,10 @@ def BaseName(fullname):
     return os.path.basename(fullname)
 
 def SplitString(string):
+
+    if '\\n' in string:
+        string = string.replace('\\n', '{0A}')
+
     #以 {01} {0B} 等这种字节转义作为分隔符,将字符串分组
     pattern = re.compile('\{[0-9A-Fa-f]{2}\}')
 

@@ -252,7 +252,9 @@ int read_code_table(const char* table_name, CODE_PAIR_VEC* table)
     utf8_size = cc_utf16_to_utf8(&file_buffer[2], file_size-2, utf8_buffer, utf8_size);
     write_new_file(TEMP_CODE_TABLE_FN, utf8_buffer, utf8_size);
 
-    setlocale(LC_CTYPE, "en_US.utf8");  //iconv will clear locale at open, we have to set it back
+    char* locale = setlocale(LC_CTYPE, "en_US.UTF-8");  //iconv will clear locale at open, we have to set it back
+    printf("locale: %s\n", locale);
+
     FILE* f_ct = fopen(TEMP_CODE_TABLE_FN, "r");
     if (!f_ct)
     {
