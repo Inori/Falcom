@@ -56,8 +56,8 @@ def MakeStrDic(psp_jp_files, pc_cn_files, report):
             if (not jp_text) and (not cn_text):
                 continue
 
-            if 't_ittxt' in fname:
-                cn_text = ProcessITTXTCNText(jp_text, cn_text)
+            # if 't_ittxt' in fname:
+            #     cn_text = ProcessITTXTCNText(jp_text, cn_text)
 
             jp_group = Common.SplitString(jp_text)
             cn_group = Common.SplitString(cn_text)
@@ -147,6 +147,25 @@ def FuzzyMatch(src_line, fname, match_dic, report):
         break
     return matched_line
 
+# 有一些特殊的映射，编程处理不是很方便，直接手动放到 special_map.txt 文件里
+def ParseSpecialMap():
+    src = open('special_map.txt', 'r', encoding='utf16')
+    _lines = src.readlines()
+    src.close()
+    lines = [line.rstrip('\n') for line in _lines if line]
+    map_list = []
+    for line in lines:
+        pair = line.split('/=')
+        key_str = pair[0]
+        value_str = pair[1]
+        map_list.append((key_str, value_str))
+    return map_list
+
+# 这里做一些修正
+def FixKeyString(key_str):
+    key_str = key_str.replace('――', '──')
+    return key_str
+
 
 def OutputMapFile(text_list, jpcn_dic, match_dic, dst_file, report_not_match, report_fuzzy_match):
 
@@ -160,9 +179,15 @@ def OutputMapFile(text_list, jpcn_dic, match_dic, dst_file, report_not_match, re
             value_str = jpcn_dic[matched_line]
         else:
             value_str = jpcn_dic[key_str]
+
+        key_str = FixKeyString(key_str)
         dst_file.write(FormatString(idx, key_str, value_str))
         idx += 1
 
+    special_list = ParseSpecialMap()
+    for key_str, value_str in special_list:
+        dst_file.write(FormatString(idx, key_str, value_str))
+        idx += 1
 
 def main():
 

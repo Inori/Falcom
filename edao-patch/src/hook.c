@@ -68,8 +68,8 @@ pfunc_scp_process_text old_scp_process_text = NULL;
 ///////////////////////////////////////////////////////////
 typedef struct SUBSTR_ITEM_S
 {
-	char* sub_str;
-	uint32_t sub_len;
+    char* sub_str;
+    uint32_t sub_len;
 } SUBSTR_ITEM;
 
 
@@ -433,7 +433,7 @@ uint32_t parse_opcode_len(char* opcode)
 }
 
 
-#define SUBSTR_ITEM_MAX 32
+#define SUBSTR_ITEM_MAX 8
 #define DEFAULT_TRANSLATE_BUFF_LEN (4096 * 5)
 static char tl_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
 
@@ -642,36 +642,67 @@ uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
 }
 
 
-int try_rip_string(const char* old_str, int old_len, char**out_str, int* out_len, int* rip_len)
+//return index of string need to be translate
+int split_trans_string(const char* old_str, int old_len,
+                       SUBSTR_ITEM items[], uint32_t* item_count)
 {
-    int is_riped = 0;
-    const char* trans_str = old_str;
-    int trans_len = old_len;
-    
-    const char tag[3] = {0x20, 0x81, 0x7A};  //" 】"
-
     // if the 2 3 4 bytes of str is " 】", and if it's next char is the first byte of sjis wide char
-    // we rebase the string pointer to the char next to "】"
+    const char tag_brace[3] = {0x20, 0x81, 0x7A};  //" 】"
     if (old_len > 4)
     {
-        if ( !memcmp(&old_str[1], tag, sizeof(tag)) )
+        if ( !memcmp(&old_str[1], tag_brace, sizeof(tag_brace)) )
         {
             const char* rip_str = &old_str[4];
             char ch = *rip_str;
             if ((ch >= 0x81 && ch <= 0x9F) ||
                 (ch >= 0xE0 && ch <= 0xEF))
             {
-                trans_str = rip_str;
-                trans_len = old_len - (rip_str - old_str);
-                is_riped = 1;
-                *rip_len = 4;
+                items[0].sub_str = old_str;
+                items[0].sub_len = sizeof(tag_brace) + 1;
+                items[1].sub_str = rip_str;
+                items[1].sub_len = old_len - items[0].sub_len;
+
+                *item_count = 2;
+                return 1;
             }
         }
     }
 
-    *out_str = trans_str;
-    *out_len = trans_len;
-    return is_riped;
+    // if both the first and the last char is "◆"
+    const char tag_diamond[2] = {0x81, 0x9F};  //"◆"
+    if (old_len > 4 &&
+        !strncmp(old_str, tag_diamond, sizeof(tag_diamond)) &&
+        !strncmp(&old_str[old_len - 2], tag_diamond, sizeof(tag_diamond)))
+    {
+        const char* rip_str = old_str + sizeof(tag_diamond);
+        items[0].sub_str = old_str;
+        items[0].sub_len = sizeof(tag_diamond);
+        items[1].sub_str = rip_str;
+        items[1].sub_len = old_len - 2 * sizeof(tag_diamond);
+        items[2].sub_str = &old_str[old_len - 2];
+        items[2].sub_len = sizeof(tag_diamond);
+
+        *item_count = 3;
+        return 1;
+    }
+
+    // if we get here, the entire old string is the target string
+    items[0].sub_str = old_str;
+    items[0].sub_len = old_len;
+    *item_count = 1;
+    return 0;
+}
+
+void merge_trans_string(char* out_str, int* out_len,
+                       SUBSTR_ITEM items[], uint32_t item_count)
+{
+    int pos = 0;
+    for (uint32_t i = 0; i != item_count; ++i)
+    {
+        memcpy(out_str + pos, items[i].sub_str, items[i].sub_len);
+        pos += items[i].sub_len;
+    }
+    *out_len = pos;
 }
 
 
@@ -680,41 +711,36 @@ uint32_t new_scp_process_text(void* this, uint32_t uk1, uint32_t uk2, char* str,
                               uint32_t uk3, uint32_t uk4, uint32_t uk5, uint32_t uk6,
                               uint32_t uk7, uint32_t uk8)
 {
-    char* new_str = NULL;
     static char trans_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
     static char tmp_buffer[DEFAULT_TRANSLATE_BUFF_LEN] = {0};
+
+    char* new_str = NULL;
+    SUBSTR_ITEM str_items[SUBSTR_ITEM_MAX] = {0};
 
     new_str = str;
 
     if (str && *str)
     {
-        //memset(trans_buffer, 0, DEFAULT_TRANSLATE_BUFF_LEN);
         int old_len = strlen(str);
 
-        char* trans_str = str;
-        int trans_len = old_len;
-        int rip_len = 0;
-        int is_riped = try_rip_string(str, old_len, &trans_str, &trans_len, &rip_len);
+        uint32_t item_count = SUBSTR_ITEM_MAX;
+        int idx = split_trans_string(str, old_len, str_items, &item_count);
+
+        const char* trans_str = str_items[idx].sub_str;
+        int trans_len = str_items[idx].sub_len;
 
         uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;
         int is_tranlated = tl_translate(&g_tl_context_sys,
                                         trans_str, trans_len,
                                         trans_buffer, &translate_len);
-
         if (is_tranlated)
         {
-            if (is_riped)
-            {
-                memcpy(tmp_buffer, str, rip_len);
-                memcpy(&tmp_buffer[rip_len], trans_buffer, translate_len);
-                tmp_buffer[rip_len + translate_len] = 0;
-                new_str = tmp_buffer;
-            }
-            else
-            {
-                trans_buffer[translate_len] = 0;
-                new_str = trans_buffer;
-            }
+            str_items[idx].sub_str = trans_buffer;
+            str_items[idx].sub_len = translate_len;
+            int new_len = 0;
+            merge_trans_string(tmp_buffer, &new_len, str_items, item_count);
+            tmp_buffer[new_len] = 0;
+            new_str = tmp_buffer;
         }
         else
         {
@@ -736,7 +762,6 @@ uint32_t new_scp_process_text(void* this, uint32_t uk1, uint32_t uk2, char* str,
                 dump_mem("process_text not hit str:", str, old_len);
             }
 #endif  //EDAO_HOOK_DEBUG
-
         }
     }
     old_scp_process_text = (pfunc_scp_process_text)ADDR_THUMB(p_ctx_scp_process_text->old_func);
