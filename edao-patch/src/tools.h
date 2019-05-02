@@ -40,6 +40,9 @@ void vita_free(void* mem);
 //seems memcpy will use NEON register without protect
 //cause some float values in game corrupt
 void *memcpy_asm(void* dst, void* src, uint32_t size);
+#ifdef memcpy
+#undef memcpy
+#endif
 #define memcpy memcpy_asm
 
 //string tools

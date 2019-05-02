@@ -1,11 +1,10 @@
-#include "tools.h"
-
 #include <stdio.h>
 #include <string.h>
 #include <psp2/kernel/processmgr.h>
 #include <psp2/appmgr.h>
 #include <psp2/kernel/sysmem.h>
 
+#include "tools.h"
 #include "log.h"
 
 #define SCE_APPMGR_APP_PARAM_TITLE_ID 12

@@ -16,6 +16,17 @@ def Walk(adr):
 def BaseName(fullname):
     return os.path.basename(fullname)
 
+
+def IsAlNum(string):
+    for ch in string:
+        if ord(ch) >= 0x20 and ord(ch) <= 0x7F:
+            continue
+        else:
+            return False
+    return True
+
+
+
 def SplitString(string):
 
     if '\\n' in string:
@@ -59,3 +70,6 @@ def SplitString(string):
 def ParseWQSGLine(line):
     group = line.split(',', 2)
     return (group[0], group[1], group[2])
+
+def FormatWQSGLine(offset, len, text):
+    return '{0:},{1:},{2:}'.format(offset, len, text)

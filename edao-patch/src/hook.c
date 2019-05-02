@@ -27,8 +27,7 @@ INT_HASH_MAP* not_hit_map = NULL;
 
 ///////////////////////////////////////////////////////////
 
-TL_CONTEXT g_tl_context_scena;
-TL_CONTEXT g_tl_context_sys;
+TL_CONTEXT g_tl_context;
 
 ///////////////////////////////////////////////////////////
 
@@ -283,7 +282,7 @@ void translate_name(char* name)
 	}
 
 	uint32_t name_len = strlen(name);
-	int tranlated = tl_translate(&g_tl_context_scena,
+	int tranlated = tl_translate(&g_tl_context,
 				 name, name_len, 
 				 name, &name_len);
 	if (tranlated)
@@ -470,7 +469,7 @@ char* new_scp_process_scena(void* this, char* opcode, char* name, uint32_t uk)
 	// 	//dump_mem("Before:", (uint8_t*)opcode, opcode_len);
 
 	// 	uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
-	// 	translate_string(&g_tl_context_scena, opcode, opcode_len,
+	// 	translate_string(&g_tl_context, opcode, opcode_len,
 	// 					 tl_buffer, &translate_len, 
 	// 					 str_items, item_count);
 	// 	tl_buffer[translate_len] = 0;
@@ -525,7 +524,7 @@ char* new_scp_process_story(void* this, char* opcode, char* str, uint32_t uk)
 		// 		//dump_mem("Before:", (uint8_t*)opcode, opcode_len);
 
 		// 		uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN;  //will be real tranlated len after call
-		// 		translate_string(&g_tl_context_sys, opcode, opcode_len,
+		// 		translate_string(&g_tl_context, opcode, opcode_len,
 		// 										 tl_buffer_story, &translate_len,
 		// 										 str_items, item_count);
 		// 		tl_buffer_story[translate_len] = 0;
@@ -574,7 +573,7 @@ uint32_t new_draw_item1(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
 		// 		split_string(trans_str, trans_len, str_items, &item_count);
 
 		// 		uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;  //will be real tranlated len after call
-		// 		translate_string(&g_tl_context_sys, str, old_len,
+		// 		translate_string(&g_tl_context, str, old_len,
 		// 										 trans_buffer, &translate_len,
 		// 										 str_items, item_count);
 
@@ -603,7 +602,7 @@ uint32_t new_draw_item2(void* this, uint32_t uk1, uint32_t uk2, char* str, uint3
 //         memset(trans_buffer, 0, DEFAULT_TRANSLATE_BUFF_LEN);
 //         int old_len = strlen(str);
 //         uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;
-//         int is_tranlated = tl_translate(&g_tl_context_sys,
+//         int is_tranlated = tl_translate(&g_tl_context,
 //                                         str, old_len,
 //                                         trans_buffer, &translate_len);
 //         if (is_tranlated)
@@ -730,7 +729,7 @@ uint32_t new_scp_process_text(void* this, uint32_t uk1, uint32_t uk2, char* str,
         int trans_len = str_items[idx].sub_len;
 
         uint32_t translate_len = DEFAULT_TRANSLATE_BUFF_LEN - 1;
-        int is_tranlated = tl_translate(&g_tl_context_sys,
+        int is_tranlated = tl_translate(&g_tl_context,
                                         trans_str, trans_len,
                                         trans_buffer, &translate_len);
         if (is_tranlated)
