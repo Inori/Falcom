@@ -1,2 +1,9 @@
-# Falcom
-Some tools about falcom
+# Falcom  
+
+PSV 碧之轨迹EVO 汉化程序源码  
+
+目前的汉化测试补丁还很不完整，EVO和老版之间有差异的文本没有汉化，新增剧情没有汉化  
+
+我自己大概是没什么时间继续下去了  
+
+如果你想继续汉化碧轨EVO或者零轨EVO，可以提个Issue联系我，我会看到的
